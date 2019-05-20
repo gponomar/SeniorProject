@@ -64,7 +64,7 @@ Processor::Processor () : voiceProcessor (nullptr)
 	paramState.triangleVolume = 1.;
 	paramState.releaseTime = 0.;
 	paramState.attackTime = 0.;
-    paramState.sustainTime = 0.;
+    paramState.sustainVolume = 0.5;
     paramState.decayTime = 0.;
 	paramState.sinusDetune = 0;
 	paramState.triangleSlop = 0.5;
@@ -256,14 +256,14 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.attackTime = value;
 							break;
 						}
-                        case kparamSustainTime:
+                        case kParamSustainVolume:
                         {
-                            paramState.attackTime = value;
+                            paramState.sustainVolume = value;
                             break;
                         }
                         case kParamDecayTime:
                         {
-                            paramState.attackTime = value;
+                            paramState.decayTime = value;
                             break;
                         }
 						case kParamSinusDetune:

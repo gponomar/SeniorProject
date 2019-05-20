@@ -53,6 +53,7 @@
 #define M_PI_MUL_2		6.28318530717958647692
 #endif
 
+#define MAX_VOLUME .8
 namespace Steinberg {
 namespace Vst {
 namespace NoteExpressionSynth {
@@ -75,7 +76,7 @@ struct GlobalParameterState
 	ParamValue releaseTime;		// [0, +1]
     
     
-    ParamValue sustainTime;        // [0, +1]
+    ParamValue sustainVolume;        // [0, +1]
     ParamValue decayTime;        // [0, +1]
 
 	ParamValue sinusDetune;		// [-1, +1]
@@ -131,7 +132,7 @@ enum VoiceParameters
 	kSinusDetune,
 	kReleaseTimeMod,
 	kAttackTimeMod,
-    kSustainTimeMod,
+    kSustainVolumeMod,
     kDecayTimeMod,
 	kSquareVolume,
 
@@ -192,6 +193,7 @@ protected:
 	uint32 n;
 	int32 noisePos;
 	int32 noiseStep;
+    bool decayStart = false;
 
 	Filter* filter;
     Filter* filterOne;
@@ -208,6 +210,7 @@ protected:
 	ParamValue currentSinusVolume;
 	ParamValue currentSinusDetune;
 	ParamValue currentSquareVolume;
+    ParamValue currentSustainVolume;
 	ParamValue currentTriangleVolume;
 	ParamValue currentTriangleSlope;
 	ParamValue currentLPFreq;
@@ -220,6 +223,7 @@ protected:
 
 	ParamValue levelFromVel;
 	ParamValue noteOnVolumeRamp;
+    ParamValue noteOnVolumeRampDecay;
 	ParamValue noteOffVolumeRamp;
 };
 
@@ -386,9 +390,12 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kAttackTimeMod, 2 * (value - 0.5));
 		}
             
-        case Controller::kSustainTimeModTypeID:
+        case Controller::kSustainVolumeModTypeID:
         {
-            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kSustainTimeMod, 2 * (value - 0.5));
+            //VoiceBase<kNumParameters, SamplePrecision, 2, //GlobalParameterState>::setNoteExpressionValue(kSustainVolumeMod, 2 * (value - 0.5));
+            ParamValue susVol = VoiceStatics::normalizedLevel2Gain ((float)value);
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSustainVolumeMod, susVol);
+            break;
         }
             
         case Controller::kDecayTimeModTypeID:
@@ -533,6 +540,36 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 		this->noteOnSampleOffset--;
 		this->noteOffSampleOffset--;
 
+        if (this->noteOffSampleOffset < 0)
+        {
+            volumeRamp = 0;
+            if (decayStart)
+            {
+                //turn decayStart off in release below
+                currentVolume -= noteOnVolumeRampDecay;
+                if (currentVolume <= (this->globalParameters->sustainVolume))
+                {
+                    currentVolume = (this->globalParameters->sustainVolume);
+                }
+            }
+            
+            //COME BACK WITH MAX VOLUME .8
+            else if (currentVolume < MAX_VOLUME)
+            {
+                // ramp note on
+                currentVolume += noteOnVolumeRamp;
+                if (currentVolume > MAX_VOLUME)
+                {
+                    currentVolume = MAX_VOLUME;
+                    decayStart = true;
+                }
+            }
+            else
+            {
+                this->noteOnSampleOffset = -1;
+            }
+            
+        }
 		if (this->noteOnSampleOffset <= 0)
 		{
 			// we are in Release
@@ -550,6 +587,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 				else
 				{
 					this->noteOffSampleOffset = this->noteOnSampleOffset = -1;
+                    decayStart = false;
 					return false;
 				}
 			}
@@ -647,6 +685,7 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
 	currentNoiseVolume = this->values[kNoiseVolume] = this->globalParameters->noiseVolume;
 	currentTriangleSlope = this->values[kTriangleSlope] = this->globalParameters->triangleSlop;
 	currentSquareVolume = this->values[kSquareVolume] = this->globalParameters->squareVolume;
+    currentSustainVolume = this->values[kSustainVolumeMod] = this->globalParameters->sustainVolume;
 	
 	// filter setting
 	currentLPFreq = this->globalParameters->filterFreq;
@@ -682,7 +721,37 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
 	}
 	this->values[kSinusDetune] = currentSinusDetune;
 	this->values[kTuningMod] = 0;
-
+    
+    //////atttaaacckkkk---------------------------
+    
+    ParamValue timeFactor;
+    //if (!decayStart)
+    //{
+        if (this->values[kAttackTimeMod] == 0)
+            timeFactor = 1;
+        else
+            timeFactor = ::pow (100., this->values[kAttackTimeMod]);
+        
+        noteOnVolumeRamp = 1.0 / (timeFactor * this->sampleRate * ((this->globalParameters->attackTime * MAX_ATTACK_TIME_SEC) + 0.005));
+        if (currentVolume)
+            noteOnVolumeRamp *= currentVolume;
+        //////////////////-----------------------------
+    //}
+    //else
+    //{
+    ParamValue timeFactorDecay;
+        //////deeeecccccaaaaaayyyy---------------------------
+        if (this->values[kDecayTimeMod] == 0)
+            timeFactorDecay = 1;
+        else
+            timeFactorDecay = ::pow (100., this->values[kDecayTimeMod]);
+        
+        noteOnVolumeRampDecay = 1.0 / (timeFactorDecay * this->sampleRate * ((this->globalParameters->decayTime * MAX_DECAY_TIME_SEC) + 0.005));
+        if (currentVolume)
+            noteOnVolumeRampDecay *= currentVolume;
+        //////////////////-----------------------------
+    //}
+    
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn (_pitch, velocity, tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
 }
@@ -724,7 +793,7 @@ void Voice<SamplePrecision>::reset ()
     this->values[kFilterTwoQMod] = 0.;
 	this->values[kReleaseTimeMod] = 0.;
 	this->values[kAttackTimeMod] = 0.;
-    this->values[kSustainTimeMod] = 0.;
+    this->values[kSustainVolumeMod] = 0.;
     this->values[kDecayTimeMod] = 0.;
 	currentPanningLeft = this->values[kPanningLeft] = 1.;
 	currentPanningRight = this->values[kPanningRight] = 1.;

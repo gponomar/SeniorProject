@@ -162,11 +162,11 @@ public:
 	OBJ_METHODS(AttackTimeModNoteExpressionType, NoteExpressionType)
 };
     
-    class SustainTimeModNoteExpressionType : public NoteExpressionType
-    {
+class SustainVolumeModNoteExpressionType : public NoteExpressionType
+{
     public:
-        SustainTimeModNoteExpressionType()
-        : NoteExpressionType (Controller::kAttackTimeModTypeID, String("SustainTime"), String("SusTime"), String("%"),
+        SustainVolumeModNoteExpressionType()
+        : NoteExpressionType (Controller::kSustainVolumeModTypeID, String("SustainVolume"), String("SusVolume"), String("%"),
         -1, 0.5, 0., 1., 0, NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsOneShot)
         {
         }
@@ -191,14 +191,14 @@ public:
             }
             return kResultFalse;
         }
-        OBJ_METHODS(SustainTimeModNoteExpressionType, NoteExpressionType)
-    };
+        OBJ_METHODS(SustainVolumeModNoteExpressionType, NoteExpressionType)
+};
     
-    class DecayTimeModNoteExpressionType : public NoteExpressionType
-    {
+class DecayTimeModNoteExpressionType : public NoteExpressionType
+{
     public:
         DecayTimeModNoteExpressionType()
-        : NoteExpressionType (Controller::kAttackTimeModTypeID, String("Decay Time"), String("DecTime"), String("%"),
+        : NoteExpressionType (Controller::kDecayTimeModTypeID, String("Decay Time"), String("DecTime"), String("%"),
         -1, 0.5, 0., 1., 0, NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsOneShot)
         {
         }
@@ -224,7 +224,7 @@ public:
             return kResultFalse;
         }
         OBJ_METHODS(DecayTimeModNoteExpressionType, NoteExpressionType)
-    };
+};
     
 
 //-----------------------------------------------------------------------------
@@ -339,9 +339,13 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 
 		parameters.addParameter (new RangeParameter (USTRING("Active Voices"), kParamActiveVoices, nullptr, 0, MAX_VOICES, 0, MAX_VOICES, ParameterInfo::kIsReadOnly));
 
-        param = new RangeParameter(USTRING("SustainTime"), kparamSustainTime, USTRING("sec"), 0.005, MAX_ATTACK_TIME_SEC, 0.025);
-        param->setPrecision(3);
-        parameters.addParameter(param);
+        //param = new RangeParameter(USTRING("SustainTime"), kparamSustainTime, USTRING("sec"), 0.005, MAX_ATTACK_TIME_SEC, 0.025);
+        //param->setPrecision(3);
+        //parameters.addParameter(param);
+        
+        param = new RangeParameter (USTRING("Sustain Volume"), kParamSustainVolume, USTRING("%"), 0, 100, 80);
+        param->setPrecision (1);
+        parameters.addParameter (param);
         
         param = new RangeParameter(USTRING("DecayTime"), kParamDecayTime, USTRING("sec"), 0.005, MAX_ATTACK_TIME_SEC, 0.025);
         param->setPrecision(3);
@@ -397,7 +401,12 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         
 		noteExpressionTypes.addNoteExpressionType (new ReleaseTimeModNoteExpressionType ());
 		noteExpressionTypes.addNoteExpressionType(new AttackTimeModNoteExpressionType());
-        noteExpressionTypes.addNoteExpressionType(new SustainTimeModNoteExpressionType());
+        //noteExpressionTypes.addNoteExpressionType(new SustainTimeModNoteExpressionType());
+        auto sustainVolumeNoteExp = new NoteExpressionType (kSustainVolumeModTypeID, String ("Sustain Volume"), String ("Sus Vol"), nullptr, -1, 1., 0., 1., 0, 0);
+        sustainVolumeNoteExp->setPhysicalUITypeID(PhysicalUITypeIDs::kPUIPressure);
+        noteExpressionTypes.addNoteExpressionType (sustainVolumeNoteExp);
+        
+        
         noteExpressionTypes.addNoteExpressionType(new DecayTimeModNoteExpressionType());
 
 	// Init Default MIDI-CC Map
@@ -440,7 +449,7 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 		setParamNormalized (kParamReleaseTime, gps.releaseTime);
 		setParamNormalized(kParamAttackTime, gps.attackTime);
         
-        setParamNormalized (kparamSustainTime, gps.sustainTime);
+        setParamNormalized (kParamSustainVolume, gps.sustainVolume);
         setParamNormalized(kParamDecayTime, gps.decayTime);
         
         

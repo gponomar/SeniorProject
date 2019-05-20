@@ -62,7 +62,7 @@ tresult GlobalParameterState::setState (IBStream* stream)
 		return kResultFalse;
 	if (!s.readDouble(attackTime))
 		return kResultFalse;
-    if (!s.readDouble(sustainTime))
+    if (!s.readDouble(sustainVolume))
         return kResultFalse;
     if (!s.readDouble(decayTime))
         return kResultFalse;
@@ -133,7 +133,7 @@ tresult GlobalParameterState::getState (IBStream* stream)
 		return kResultFalse;
 	if (!s.writeDouble(attackTime))
 		return kResultFalse;
-    if (!s.writeDouble(sustainTime))
+    if (!s.writeDouble(sustainVolume))
         return kResultFalse;
     if (!s.writeDouble(decayTime))
         return kResultFalse;

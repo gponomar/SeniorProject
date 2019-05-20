@@ -48,7 +48,7 @@
 #define MAX_VOICES				64
 #define MAX_RELEASE_TIME_SEC	5.0
 #define MAX_ATTACK_TIME_SEC		5.0
-#define MAX_SUSTAIN_TIME_SEC    5.0
+#define MAX_SUSTAIN_VOLUME_SEC    5.0
 #define MAX_DECAY_TIME_SEC      5.0
 #define NUM_FILTER_TYPE			3
 #define NUM_TUNING_RANGE		2 
@@ -82,7 +82,7 @@ enum
 
     kParamAttackTime,
     kParamDecayTime,
-    kparamSustainTime,
+    kParamSustainVolume,
     
     kParamFilterOneType,
     kParamFilterOneFreq,
@@ -148,7 +148,7 @@ public:
         kFilterOneQModTypeID,
         kFilterTwoFreqModTypeID,
         kFilterTwoQModTypeID,
-        kSustainTimeModTypeID,
+        kSustainVolumeModTypeID,
         kDecayTimeModTypeID,
         
 	};
