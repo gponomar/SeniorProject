@@ -51,6 +51,8 @@
 #define MAX_SUSTAIN_VOLUME_SEC    5.0
 #define MAX_DECAY_TIME_SEC      5.0
 #define NUM_FILTER_TYPE			3
+#define NUM_OSC_TYPE            4
+#define NUM_OSC_TYPE_TWO        4
 #define NUM_TUNING_RANGE		2 
 
 namespace Steinberg {
@@ -67,9 +69,10 @@ enum
 	kParamSinusVolume,
 	kParamTriangleVolume,
 	kParamSinusDetune,
+    
 	kParamBypassSNA,
 	kParamTriangleSlop,
-	kParamFilterType,
+    kParamFilterType,
 	kParamFilterFreq,
 	kParamFilterQ,
 	kParamMasterVolume,
@@ -79,7 +82,7 @@ enum
 	kParamTuningRange,
 	kParamActiveVoices,
 	kParamSquareVolume,
-
+   
     kParamAttackTime,
     kParamDecayTime,
     kParamSustainVolume,
@@ -94,6 +97,15 @@ enum
     kParamFilterTwoQ,
     kParamFilterTwoFreqModDepth,
     
+    kParamNoiseVolumeTwo,
+    kParamSinusVolumeTwo,
+    kParamTriangleVolumeTwo,
+    kParamSinusDetuneTwo,
+    kParamTriangleSlopTwo,
+    kParamSquareVolumeTwo,
+    kParamOscType,
+    kParamOscTypeTwo,
+
     
 	kNumGlobalParameters
     
@@ -130,17 +142,25 @@ public:
 	enum NoteExpressionTypeIds
 	{
 		kNoiseVolumeTypeID = kCustomStart,
+        kNoiseVolumeTwoTypeID, //should this also be custom start?
 		kFilterFreqModTypeID,
 		kFilterQModTypeID,
 		kSinusVolumeTypeID,
+        kSinusVolumeTwoTypeID,
 		kTriangleVolumeTypeID,
+        kTriangleVolumeTwoTypeID,
 		kFilterTypeTypeID,
+        kOscTypeTypeID,
+        kOscTypeTwoTypeID,
 		kTriangleSlopeTypeID,
+        kTriangleSlopeTwoTypeID,
 		kSinusDetuneTypeID,
+        kSinusDetuneTwoTypeID,
 		kReleaseTimeModTypeID,
 		kAttackTimeModTypeID,
 		kTextInputTypeID,
 		kSquareVolumeTypeID,
+        kSquareVolumeTwoTypeID,
         
         kFilterOneTypeTypeID,
         kFilterTwoTypeTypeID,

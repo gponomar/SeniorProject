@@ -61,13 +61,18 @@ Processor::Processor () : voiceProcessor (nullptr)
 
 	paramState.noiseVolume = 0.1;
 	paramState.sinusVolume = 1.;
-	paramState.triangleVolume = 1.;
+	paramState.triangleVolume= 1.;
+    paramState.noiseVolumeTwo = 0.1;
+    paramState.sinusVolumeTwo = 1.;
+    paramState.triangleVolumeTwo = 1.;
 	paramState.releaseTime = 0.;
 	paramState.attackTime = 0.;
     paramState.sustainVolume = 0.5;
     paramState.decayTime = 0.;
 	paramState.sinusDetune = 0;
 	paramState.triangleSlop = 0.5;
+    paramState.sinusDetuneTwo = 0;
+    paramState.triangleSlopTwo = 0.5;
 	paramState.filterFreq = 1.;
 	paramState.filterQ = 0.;
 	paramState.filterType = 0;
@@ -231,21 +236,41 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.noiseVolume = value;
 							break;
 						}
+                        case kParamNoiseVolumeTwo:
+                        {
+                            paramState.noiseVolumeTwo = value;
+                            break;
+                        }
 						case kParamSinusVolume:
 						{
 							paramState.sinusVolume = value;
 							break;
 						}
+                        case kParamSinusVolumeTwo:
+                        {
+                            paramState.sinusVolumeTwo = value;
+                            break;
+                        }
 						case kParamTriangleVolume:
 						{
 							paramState.triangleVolume = value;
 							break;
 						}
+                        case kParamTriangleVolumeTwo:
+                        {
+                            paramState.triangleVolumeTwo = value;
+                            break;
+                        }
 						case kParamSquareVolume:
 						{
 							paramState.squareVolume = value;
 							break;
 						}
+                        case kParamSquareVolumeTwo:
+                        {
+                            paramState.squareVolumeTwo = value;
+                            break;
+                        }
 						case kParamReleaseTime:
 						{
 							paramState.releaseTime = value;
@@ -277,12 +302,29 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.triangleSlop = value;
 							break;
 						}
+                        case kParamTriangleSlopTwo:
+                        {
+                            paramState.triangleSlopTwo = value;
+                            break;
+                        }
 						case kParamFilterType:
 						{
 							paramState.filterType = std::min<int8> (
 							    (int8) (NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
 							break;
 						}
+                        case kParamOscType:
+                        {
+                            paramState.oscType = std::min<int8> (
+                                                                 (int8) (NUM_OSC_TYPE * value), NUM_OSC_TYPE - 1);
+                            break;
+                        }
+                        case kParamOscTypeTwo:
+                        {
+                            paramState.oscTypeTwo = std::min<int8> (
+                                                                    (int8) (NUM_OSC_TYPE_TWO * value), NUM_OSC_TYPE_TWO - 1);
+                            break;
+                        }
 						case kParamFilterFreq:
 						{
 							paramState.filterFreq = value;

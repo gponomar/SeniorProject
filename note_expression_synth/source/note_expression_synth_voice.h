@@ -71,6 +71,11 @@ struct GlobalParameterState
 	ParamValue sinusVolume;		// [0, +1]
 	ParamValue triangleVolume;	// [0, +1]
 	ParamValue squareVolume;	// [0, +1]
+    
+    ParamValue noiseVolumeTwo;        // [0, +1]
+    ParamValue sinusVolumeTwo;        // [0, +1]
+    ParamValue triangleVolumeTwo;    // [0, +1]
+    ParamValue squareVolumeTwo;    // [0, +1]
 	
 	ParamValue attackTime;		// [0, +1]
 	ParamValue releaseTime;		// [0, +1]
@@ -81,6 +86,9 @@ struct GlobalParameterState
 
 	ParamValue sinusDetune;		// [-1, +1]
 	ParamValue triangleSlop;	// [0, +1]
+    
+    ParamValue sinusDetuneTwo;        // [-1, +1]
+    ParamValue triangleSlopTwo;    // [0, +1]
 
 	ParamValue filterFreq;		// [-1, +1]
 	ParamValue filterQ;			// [-1, +1]
@@ -95,6 +103,8 @@ struct GlobalParameterState
     ParamValue freqTwoModDepth;    // [-1, +1]
 	
 	int8 filterType;			// [0, 1, 2]
+    int8 oscType;            // [0, 1, 2, 3]
+    int8 oscTypeTwo;            // [0, 1, 2, 3]
     int8 filterOneType;            // [0, 1, 2]
     int8 filterTwoType;            // [0, 1, 2]
 	int8 tuningRange;			// [0, 1]
@@ -113,6 +123,7 @@ enum VoiceParameters
 	kPanningLeft,
 	kPanningRight,
 	kNoiseVolume,
+    kNoiseVolumeTwo,
 	kFilterFrequencyMod,
 	kFilterQMod,
     
@@ -123,6 +134,8 @@ enum VoiceParameters
     
 	kSinusVolume,
 	kTriangleVolume,
+    kSinusVolumeTwo,
+    kTriangleVolumeTwo,
 	kFilterType,
     
     kFilterOneType,
@@ -130,11 +143,14 @@ enum VoiceParameters
     
 	kTriangleSlope,
 	kSinusDetune,
+    kTriangleSlopeTwo,
+    kSinusDetuneTwo,
 	kReleaseTimeMod,
 	kAttackTimeMod,
     kSustainVolumeMod,
     kDecayTimeMod,
 	kSquareVolume,
+    kSquareVolumeTwo,
 
 	kNumParameters
 };
@@ -203,6 +219,10 @@ protected:
 	SamplePrecision sinusPhase;
 	ParamValue currentTriangleF;
 	ParamValue currentSinusF;
+    SamplePrecision trianglePhaseTwo;
+    SamplePrecision sinusPhaseTwo;
+    ParamValue currentTriangleFTwo;
+    ParamValue currentSinusFTwo;
 	ParamValue currentVolume;
 	ParamValue currentPanningLeft;
 	ParamValue currentPanningRight;
@@ -210,9 +230,15 @@ protected:
 	ParamValue currentSinusVolume;
 	ParamValue currentSinusDetune;
 	ParamValue currentSquareVolume;
+    ParamValue currentNoiseVolumeTwo;
+    ParamValue currentSinusVolumeTwo;
+    ParamValue currentSinusDetuneTwo;
+    ParamValue currentSquareVolumeTwo;
     ParamValue currentSustainVolume;
 	ParamValue currentTriangleVolume;
 	ParamValue currentTriangleSlope;
+    ParamValue currentTriangleVolumeTwo;
+    ParamValue currentTriangleSlopeTwo;
 	ParamValue currentLPFreq;
 	ParamValue currentLPQ;
     
@@ -294,24 +320,48 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kNoiseVolume, value * 2.);
 			break;
 		}
+        //------------------------------
+        case Controller::kNoiseVolumeTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kNoiseVolumeTwo, value * 2.);
+            break;
+        }
 		//------------------------------
 		case Controller::kSinusVolumeTypeID:
 		{
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSinusVolume, value * 2.);
 			break;
 		}
+        //------------------------------
+        case Controller::kSinusVolumeTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSinusVolumeTwo, value * 2.);
+            break;
+        }
 		//------------------------------
 		case Controller::kTriangleVolumeTypeID:
 		{
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kTriangleVolume, value * 2.);
 			break;
 		}
+        //------------------------------
+        case Controller::kTriangleVolumeTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kTriangleVolumeTwo, value * 2.);
+            break;
+        }
 		//------------------------------
 		case Controller::kSquareVolumeTypeID:
 		{
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSquareVolume, value * 2.);
 			break;
 		}
+        //------------------------------
+        case Controller::kSquareVolumeTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSquareVolumeTwo, value * 2.);
+            break;
+        }
 		//------------------------------
 		case Controller::kFilterFreqModTypeID:
 		{
@@ -372,12 +422,24 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kTriangleSlope, value);
 			break;
 		}
+        //------------------------------
+        case Controller::kTriangleSlopeTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kTriangleSlopeTwo, value);
+            break;
+        }
 		//------------------------------
 		case Controller::kSinusDetuneTypeID:
 		{
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSinusDetune, value);
 			break;
 		}
+        //------------------------------
+        case Controller::kSinusDetuneTwoTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kSinusDetuneTwo, value);
+            break;
+        }
 		//------------------------------
 		case Controller::kReleaseTimeModTypeID:
 		{
@@ -413,6 +475,7 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
+    //TODO: DID NOT UPDATE WITH SECOND GENERATOR
 bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 numSamples)
 {
 	//---compute tuning-------------------------
@@ -424,6 +487,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 		tuningInHz = VoiceStatics::freqTab[this->pitch] * (::pow (2.0, (this->values[kTuningMod] * 10 + this->globalParameters->masterTuning * 2.0 / 12.0 + this->tuning)) - 1);
 	}
 	
+    //Triangle one
 	ParamValue triangleFreq = (VoiceStatics::freqTab[this->pitch] + tuningInHz) * M_PI_MUL_2 / this->getSampleRate () / 2.;
 	if (currentTriangleF == -1)
 		currentTriangleF = triangleFreq;
@@ -434,8 +498,20 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 		trianglePhase = (SamplePrecision)((currentTriangleF - triangleFreq) * n + trianglePhase);
 		currentTriangleF = triangleFreq;
 	}
+    
+    //triangle two
+    ParamValue triangleFreqTwo = (VoiceStatics::freqTab[this->pitch] + tuningInHz) * M_PI_MUL_2 / this->getSampleRate () / 2.;
+    if (currentTriangleFTwo == -1)
+        currentTriangleFTwo = triangleFreqTwo;
+    // check for frequency changes and update the phase so that it is crackle free
+    if (triangleFreqTwo != currentTriangleFTwo)
+    {
+        // update phase
+        trianglePhaseTwo = (SamplePrecision)((currentTriangleFTwo - triangleFreqTwo) * n + trianglePhaseTwo);
+        currentTriangleFTwo = triangleFreqTwo;
+    }
 
-	// Sinus Detune
+	// Sinus Detune one
 	if (currentSinusDetune != this->values[kSinusDetune])
 	{
 		currentSinusDetune = VoiceStatics::freqTab[this->pitch] * (::pow (2.0, this->values[kSinusDetune] * 2.0 / 12.0) - 1);
@@ -450,14 +526,33 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 		currentSinusF = sinusFreq;
 	}
 
+    // Sinus Detune two
+    if (currentSinusDetuneTwo != this->values[kSinusDetuneTwo])
+    {
+        currentSinusDetuneTwo = VoiceStatics::freqTab[this->pitch] * (::pow (2.0, this->values[kSinusDetuneTwo] * 2.0 / 12.0) - 1);
+    }
+    ParamValue sinusFreqTwo = (VoiceStatics::freqTab[this->pitch] + tuningInHz + currentSinusDetuneTwo) * M_PI_MUL_2 / this->getSampleRate ();
+    if (currentSinusFTwo == -1)
+        currentSinusFTwo = sinusFreqTwo;
+    if (sinusFreqTwo != currentSinusFTwo)
+    {
+        // update phase
+        sinusPhaseTwo = (SamplePrecision)((currentSinusFTwo - sinusFreqTwo) * n) + sinusPhaseTwo;
+        currentSinusFTwo = sinusFreqTwo;
+    }
+    
 	//---calculate parameter ramps
 	ParamValue volumeRamp = 0.;
 	ParamValue panningLeftRamp = 0.;
 	ParamValue panningRightRamp = 0.;
 	ParamValue noiseVolumeRamp = 0.;
+    ParamValue noiseVolumeRampTwo = 0.;
 	ParamValue sinusVolumeRamp = 0.;
+    ParamValue sinusVolumeRampTwo = 0.;
 	ParamValue triangleVolumeRamp = 0.;
+    ParamValue triangleVolumeRampTwo = 0.;
 	ParamValue squareVolumeRamp = 0.;
+    ParamValue squareVolumeRampTwo = 0.;
 	ParamValue filterFreqRamp = 0.;
 	ParamValue filterQRamp = 0.;
     ParamValue filterOneFreqRamp = 0.;
@@ -465,6 +560,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
     ParamValue filterTwoFreqRamp = 0.;
     ParamValue filterTwoQRamp = 0.;
 	ParamValue triangleSlopeRamp = 0.;
+    ParamValue triangleSlopeRampTwo = 0.;
 	ParamValue rampTime = std::max<ParamValue> ((ParamValue)numSamples, (this->sampleRate * 0.005));
 	
 	ParamValue wantedVolume = VoiceStatics::normalizedLevel2Gain ((float)Bound (0.0, 1.0, this->globalParameters->masterVolume * levelFromVel + this->values[kVolumeMod]));
@@ -485,18 +581,34 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 	{
 		noiseVolumeRamp = (this->values[kNoiseVolume] - currentNoiseVolume) / rampTime;
 	}
+    if (this->values[kNoiseVolumeTwo] != currentNoiseVolumeTwo)
+    {
+        noiseVolumeRampTwo = (this->values[kNoiseVolumeTwo] - currentNoiseVolumeTwo) / rampTime;
+    }
 	if (this->values[kSinusVolume] != currentSinusVolume)
 	{
 		sinusVolumeRamp = (this->values[kSinusVolume] - currentSinusVolume) / rampTime;
 	}
+    if (this->values[kSinusVolumeTwo] != currentSinusVolumeTwo)
+    {
+        sinusVolumeRampTwo = (this->values[kSinusVolumeTwo] - currentSinusVolumeTwo) / rampTime;
+    }
 	if (this->values[kSquareVolume] != currentSquareVolume)
 	{
 		squareVolumeRamp = (this->values[kSquareVolume] - currentSquareVolume) / rampTime;
 	}
+    if (this->values[kSquareVolumeTwo] != currentSquareVolumeTwo)
+    {
+        squareVolumeRampTwo = (this->values[kSquareVolumeTwo] - currentSquareVolumeTwo) / rampTime;
+    }
 	if (this->values[kTriangleVolume] != currentTriangleVolume)
 	{
 		triangleVolumeRamp = (this->values[kTriangleVolume] - currentTriangleVolume) / rampTime;
 	}
+    if (this->values[kTriangleVolumeTwo] != currentTriangleVolumeTwo)
+    {
+        triangleVolumeRampTwo = (this->values[kTriangleVolumeTwo] - currentTriangleVolumeTwo) / rampTime;
+    }
 
 	ParamValue wantedLPFreq = Bound (0., 1., this->globalParameters->filterFreq + this->globalParameters->freqModDepth * this->values[kFilterFrequencyMod]);
 	if (wantedLPFreq != currentLPFreq)
@@ -534,6 +646,10 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 	{
 		triangleSlopeRamp = (this->values[kTriangleSlope] - currentTriangleSlope) / rampTime;
 	}
+    if (this->values[kTriangleSlopeTwo] != currentTriangleSlopeTwo)
+    {
+        triangleSlopeRampTwo = (this->values[kTriangleSlopeTwo] - currentTriangleSlopeTwo) / rampTime;
+    }
 
 	for (int32 i = 0; i < numSamples; i++)
 	{
@@ -591,6 +707,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 					return false;
 				}
 			}
+            //STOPPED SECOND GENERATOR HERE
 			SamplePrecision sample;
             SamplePrecision sampleTwo;
             
@@ -672,6 +789,8 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 	return true;
 }
 
+    
+//STARTED SECOND GENERATOR AGAIN
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
 void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tuning, int32 sampleOffset, int32 nId)
@@ -685,6 +804,11 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
 	currentNoiseVolume = this->values[kNoiseVolume] = this->globalParameters->noiseVolume;
 	currentTriangleSlope = this->values[kTriangleSlope] = this->globalParameters->triangleSlop;
 	currentSquareVolume = this->values[kSquareVolume] = this->globalParameters->squareVolume;
+    currentSinusVolumeTwo = this->values[kSinusVolumeTwo] = this->globalParameters->sinusVolumeTwo;
+    currentTriangleVolumeTwo = this->values[kTriangleVolumeTwo] = this->globalParameters->triangleVolumeTwo;
+    currentNoiseVolumeTwo = this->values[kNoiseVolumeTwo] = this->globalParameters->noiseVolumeTwo;
+    currentTriangleSlopeTwo = this->values[kTriangleSlopeTwo] = this->globalParameters->triangleSlopTwo;
+    currentSquareVolumeTwo = this->values[kSquareVolumeTwo] = this->globalParameters->squareVolumeTwo;
     currentSustainVolume = this->values[kSustainVolumeMod] = this->globalParameters->sustainVolume;
 	
 	// filter setting
@@ -721,6 +845,15 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
 	}
 	this->values[kSinusDetune] = currentSinusDetune;
 	this->values[kTuningMod] = 0;
+    
+    
+    currentSinusDetuneTwo = 0.;
+    if (this->globalParameters->sinusDetuneTwo != 0.)
+    {
+        currentSinusDetuneTwo = VoiceStatics::freqTab[this->pitch] * (::pow (2.0, this->globalParameters->sinusDetuneTwo * 2.0 / 12.0) - 1);
+    }
+    this->values[kSinusDetuneTwo] = currentSinusDetuneTwo;
+    this->values[kTuningMod] = 0; //DO I NEED 2???
     
     //////atttaaacckkkk---------------------------
     
@@ -782,7 +915,9 @@ void Voice<SamplePrecision>::reset ()
 	noisePos = 0;
 	n = 0;
 	sinusPhase = trianglePhase = 0.;
+    sinusPhaseTwo = trianglePhaseTwo = 0.;
 	currentSinusF = currentTriangleF = -1.;
+    currentSinusFTwo = currentTriangleFTwo = -1.;
 	this->values[kVolumeMod] = 0.;
 	this->values[kTuningMod] = 0.;
 	this->values[kFilterFrequencyMod] = 0.;
@@ -798,9 +933,13 @@ void Voice<SamplePrecision>::reset ()
 	currentPanningLeft = this->values[kPanningLeft] = 1.;
 	currentPanningRight = this->values[kPanningRight] = 1.;
 	currentNoiseVolume = this->values[kNoiseVolume] = 0.5;
+    currentNoiseVolumeTwo = this->values[kNoiseVolumeTwo] = 0.5;
 	currentSinusVolume = this->values[kSinusVolume] = 0.5;
+    currentSinusVolumeTwo = this->values[kSinusVolumeTwo] = 0.5;
 	currentSquareVolume = this->values[kSquareVolume] = 0.5;
+    currentSquareVolumeTwo = this->values[kSquareVolumeTwo] = 0.5;
 	currentTriangleVolume = this->values[kTriangleVolume] = 0.5;
+    currentTriangleVolumeTwo = this->values[kTriangleVolumeTwo] = 0.5;
 	currentLPFreq = 1.;
 	currentLPQ = 0.;
     currentLPOneFreq = 1.;

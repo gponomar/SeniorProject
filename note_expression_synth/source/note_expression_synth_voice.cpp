@@ -54,10 +54,16 @@ tresult GlobalParameterState::setState (IBStream* stream)
 		return kResultFalse;
 	if (!s.readDouble (noiseVolume))
 		return kResultFalse;
+    if (!s.readDouble (noiseVolumeTwo))
+        return kResultFalse;
 	if (!s.readDouble (sinusVolume))
 		return kResultFalse;
+    if (!s.readDouble (sinusVolumeTwo))
+        return kResultFalse;
 	if (!s.readDouble (triangleVolume))
 		return kResultFalse;
+    if (!s.readDouble (triangleVolumeTwo))
+        return kResultFalse;
 	if (!s.readDouble (releaseTime))
 		return kResultFalse;
 	if (!s.readDouble(attackTime))
@@ -68,8 +74,12 @@ tresult GlobalParameterState::setState (IBStream* stream)
         return kResultFalse;
 	if (!s.readDouble (sinusDetune))
 		return kResultFalse;
+    if (!s.readDouble (sinusDetuneTwo))
+        return kResultFalse;
 	if (!s.readDouble (triangleSlop))
 		return kResultFalse;
+    if (!s.readDouble (triangleSlopTwo))
+        return kResultFalse;
 	if (!s.readInt8 (bypassSNA))
 		return kResultFalse;
 
@@ -111,6 +121,8 @@ tresult GlobalParameterState::setState (IBStream* stream)
 	{
 		if (!s.readDouble (squareVolume))
 			return kResultFalse;
+        if (!s.readDouble (squareVolumeTwo))
+            return kResultFalse;
 	}
 	return kResultTrue;
 }
@@ -125,10 +137,16 @@ tresult GlobalParameterState::getState (IBStream* stream)
 		return kResultFalse;
 	if (!s.writeDouble (noiseVolume))
 		return kResultFalse;
+    if (!s.writeDouble (noiseVolumeTwo))
+        return kResultFalse;
 	if (!s.writeDouble (sinusVolume))
 		return kResultFalse;
+    if (!s.writeDouble (sinusVolumeTwo))
+        return kResultFalse;
 	if (!s.writeDouble (triangleVolume))
 		return kResultFalse;
+    if (!s.writeDouble (triangleVolumeTwo))
+        return kResultFalse;
 	if (!s.writeDouble (releaseTime))
 		return kResultFalse;
 	if (!s.writeDouble(attackTime))
@@ -139,8 +157,12 @@ tresult GlobalParameterState::getState (IBStream* stream)
         return kResultFalse;
 	if (!s.writeDouble (sinusDetune))
 		return kResultFalse;
+    if (!s.writeDouble (sinusDetuneTwo))
+        return kResultFalse;
 	if (!s.writeDouble (triangleSlop))
 		return kResultFalse;
+    if (!s.writeDouble (triangleSlopTwo))
+        return kResultFalse;
 	if (!s.writeInt8 (bypassSNA))
 		return kResultFalse;
 
@@ -179,6 +201,8 @@ tresult GlobalParameterState::getState (IBStream* stream)
 	// version 3
 	if (!s.writeDouble (squareVolume))
 		return kResultFalse;
+    if (!s.writeDouble (squareVolumeTwo))
+        return kResultFalse;
 
 	return kResultTrue;
 }

@@ -261,24 +261,56 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Noise Volume"), kParamNoiseVolume, USTRING("%"), 0, 100, 0);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Noise Volume Two"), kParamNoiseVolumeTwo, USTRING("%"), 0, 100, 0);
+        param->setPrecision (1);
+        parameters.addParameter (param);
 		param = new RangeParameter (USTRING("Sinus Volume"), kParamSinusVolume, USTRING("%"), 0, 100, 80);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Sinus Volume Two"), kParamSinusVolumeTwo, USTRING("%"), 0, 100, 80);
+        param->setPrecision (1);
+        parameters.addParameter (param);
 		param = new RangeParameter (USTRING("Triangle Volume"), kParamTriangleVolume, USTRING("%"), 0, 100, 20);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Triangle Volume Two"), kParamTriangleVolumeTwo, USTRING("%"), 0, 100, 20);
+        param->setPrecision (1);
+        parameters.addParameter (param);
 		param = new RangeParameter (USTRING("Square Volume"), kParamSquareVolume, USTRING("%"), 0, 100, 80);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Square Volume Two"), kParamSquareVolumeTwo, USTRING("%"), 0, 100, 80);
+        param->setPrecision (1);
+        parameters.addParameter (param);
 		
 		param = new RangeParameter (USTRING("Sinus Detune"), kParamSinusDetune, USTRING("cent"), -200, 200, 0);
 		param->setPrecision (0);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Sinus Detune Two"), kParamSinusDetuneTwo, USTRING("cent"), -200, 200, 0);
+        param->setPrecision (0);
+        parameters.addParameter (param);
 
 		param = new RangeParameter (USTRING("Triangle Slop"), kParamTriangleSlop, USTRING("%"), 0, 100, 50);
 		param->setPrecision (0);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Triangle Slop Two"), kParamTriangleSlopTwo, USTRING("%"), 0, 100, 50);
+        param->setPrecision (0);
+        parameters.addParameter (param);
 		
+        auto* OscTypeParam = new StringListParameter (USTRING("Osc Type"), kParamOscType);
+        OscTypeParam->appendString (USTRING("Triangle"));
+        OscTypeParam->appendString (USTRING("Sinus"));
+        OscTypeParam->appendString (USTRING("Square"));
+        OscTypeParam->appendString (USTRING("Noise"));
+        parameters.addParameter (OscTypeParam);
+        
+        auto* OscTypeParamTwo = new StringListParameter (USTRING("Osc Type Two"), kParamOscTypeTwo);
+        OscTypeParamTwo->appendString (USTRING("Triangle"));
+        OscTypeParamTwo->appendString (USTRING("Sinus"));
+        OscTypeParamTwo->appendString (USTRING("Square"));
+        OscTypeParamTwo->appendString (USTRING("Noise"));
+        parameters.addParameter (OscTypeParamTwo);
+        
 		auto* filterTypeParam = new StringListParameter (USTRING("Filter Type"), kParamFilterType);
 		filterTypeParam->appendString (USTRING("Lowpass"));
 		filterTypeParam->appendString (USTRING("Highpass"));
@@ -372,16 +404,29 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		
 		auto noteExp = new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
+        
+        auto noteExpTwo = new NoteExpressionType (kSinusVolumeTwoTypeID, String ("Sinus Volume Two"), String ("Sin Vol Two"), String ("%"), -1, getParameterObject (kParamSinusVolumeTwo), NoteExpressionTypeInfo::kIsAbsolute);
+        noteExpressionTypes.addNoteExpressionType (noteExpTwo);
 
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTypeID, String ("Sinus Detune"), String ("Sin Detune"), String ("Cent"), -1, getParameterObject (kParamSinusDetune), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
+		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTwoTypeID, String ("Sinus Detune Two"), String ("Sin Detune"), String ("Cent"), -1, getParameterObject (kParamSinusDetuneTwo), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTypeID, String ("Sinus DetuneTwo"), String ("Sin Detune Two"), String ("Cent"), -1, getParameterObject (kParamSinusDetune), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
+        
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleVolumeTypeID, String ("Triangle Volume"), String ("Tri Vol"), String ("%"), -1, getParameterObject (kParamTriangleVolume), NoteExpressionTypeInfo::kIsAbsolute));
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleVolumeTwoTypeID, String ("Triangle Volume Two"), String ("Tri Vol Two"), String ("%"), -1, getParameterObject (kParamTriangleVolumeTwo), NoteExpressionTypeInfo::kIsAbsolute));
+        
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSquareVolumeTypeID, String ("Square Volume"), String ("Square Vol"), String ("%"), -1, getParameterObject (kParamSquareVolume), NoteExpressionTypeInfo::kIsAbsolute));
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSquareVolumeTwoTypeID, String ("Square Volume Two"), String ("Square Vol Two"), String ("%"), -1, getParameterObject (kParamSquareVolumeTwo), NoteExpressionTypeInfo::kIsAbsolute));
+        
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kNoiseVolumeTypeID, String ("Noise Volume"), String ("Noise Vol"), String ("%"), -1, getParameterObject (kParamNoiseVolume), NoteExpressionTypeInfo::kIsAbsolute));
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kNoiseVolumeTwoTypeID, String ("Noise VolumeTwo"), String ("Noise Vol Two"), String ("%"), -1, getParameterObject (kParamNoiseVolumeTwo), NoteExpressionTypeInfo::kIsAbsolute));
 		
 		auto rNoteExp = new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
 		rNoteExp->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
 		noteExpressionTypes.addNoteExpressionType (rNoteExp);
 
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kOscTypeTypeID, String ("Osc Type"), String ("Osc Type"), nullptr, -1, getParameterObject (kParamOscType), NoteExpressionTypeInfo::kIsBipolar));
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kOscTypeTwoTypeID, String ("Osc Two Type"), String ("Osc Type"), nullptr, -1, getParameterObject (kParamOscTypeTwo), NoteExpressionTypeInfo::kIsBipolar));
+        
 		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterQModTypeID, String ("Filter Q Modulation"), String ("Q Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterTypeTypeID, String ("Filter Type"), String ("Flt Type"), nullptr, -1, getParameterObject (kParamFilterType), NoteExpressionTypeInfo::kIsBipolar));
         
@@ -460,9 +505,22 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 
 		setParamNormalized (kParamSinusDetune, (gps.sinusDetune + 1) / 2.);
 		setParamNormalized (kParamTriangleSlop, gps.triangleSlop);
+        
+        setParamNormalized (kParamNoiseVolumeTwo, gps.noiseVolumeTwo);
+        setParamNormalized (kParamSinusVolumeTwo, gps.sinusVolumeTwo);
+        setParamNormalized (kParamTriangleVolumeTwo, gps.triangleVolumeTwo);
+        setParamNormalized (kParamSquareVolumeTwo, gps.squareVolumeTwo);
+        
+        setParamNormalized (kParamSinusDetuneTwo, (gps.sinusDetuneTwo + 1) / 2.);
+        setParamNormalized (kParamTriangleSlopTwo, gps.triangleSlopTwo);
+        
 
 		setParamNormalized (kParamFilterType,
 		                    plainParamToNormalized (kParamFilterType, gps.filterType));
+        setParamNormalized (kParamOscType,
+                            plainParamToNormalized (kParamOscType, gps.oscType));
+        setParamNormalized (kParamOscTypeTwo,
+                            plainParamToNormalized (kParamOscTypeTwo, gps.oscTypeTwo));
 		setParamNormalized (kParamFilterFreq, gps.filterFreq);
 		setParamNormalized (kParamFilterQ, gps.filterQ);
         
@@ -497,6 +555,7 @@ tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value
 			noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (
 			    kTriangleSlopeTypeID, String ("Triangle Slope"), String ("Tri Slope"), String ("%"),
 			    -1, getParameterObject (kParamTriangleSlop), NoteExpressionTypeInfo::kIsAbsolute));
+            noteExpressionTypes.addNoteExpressionType (new NoteExpressionType ( kTriangleSlopeTwoTypeID, String ("Triangle Slope Two"), String ("Tri Slope Two"), String ("%"), -1, getParameterObject (kParamTriangleSlopTwo), NoteExpressionTypeInfo::kIsAbsolute));
 			if (net)
 			{
 				net->getInfo ().valueDesc.minimum = 0.5 - 3 * VoiceStatics::kNormTuningOneTune;
