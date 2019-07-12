@@ -105,6 +105,8 @@ enum
     kParamSquareVolumeTwo,
     kParamOscType,
     kParamOscTypeTwo,
+    kParamGenFreqOne,
+    kParamGenFreqTwo,
 
     
 	kNumGlobalParameters
@@ -170,6 +172,8 @@ public:
         kFilterTwoQModTypeID,
         kSustainVolumeModTypeID,
         kDecayTimeModTypeID,
+        kGenFreqOneTypeID,
+        kGenFreqTwoTypeID
         
 	};
 

@@ -298,16 +298,16 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         parameters.addParameter (param);
 		
         auto* OscTypeParam = new StringListParameter (USTRING("Osc Type"), kParamOscType);
-        OscTypeParam->appendString (USTRING("Triangle"));
         OscTypeParam->appendString (USTRING("Sinus"));
         OscTypeParam->appendString (USTRING("Square"));
+        OscTypeParam->appendString (USTRING("Triangle"));
         OscTypeParam->appendString (USTRING("Noise"));
         parameters.addParameter (OscTypeParam);
         
         auto* OscTypeParamTwo = new StringListParameter (USTRING("Osc Type Two"), kParamOscTypeTwo);
-        OscTypeParamTwo->appendString (USTRING("Triangle"));
         OscTypeParamTwo->appendString (USTRING("Sinus"));
         OscTypeParamTwo->appendString (USTRING("Square"));
+        OscTypeParamTwo->appendString (USTRING("Triangle"));
         OscTypeParamTwo->appendString (USTRING("Noise"));
         parameters.addParameter (OscTypeParamTwo);
         
@@ -317,6 +317,15 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		filterTypeParam->appendString (USTRING("Bandpass"));
 		parameters.addParameter (filterTypeParam);
 		
+        param = new LogScaleParameter<ParamValue> (USTRING("Gen Frequency One"), kParamGenFreqOne, VoiceStatics::freqLogScale);
+        param->setPrecision (1);
+        parameters.addParameter (param);
+        
+        VoiceStatics::freqLogScale.changeScaling(0, 1, 10, 20000, .5, 447.213);
+        param = new LogScaleParameter<ParamValue> (USTRING("Gen Frequency Two"), kParamGenFreqTwo, VoiceStatics::freqLogScale);
+        param->setPrecision (1);
+        parameters.addParameter (param);
+        
 		param = new LogScaleParameter<ParamValue> (USTRING("Filter Frequency"), kParamFilterFreq, VoiceStatics::freqLogScale);
 		param->setPrecision (1);
 		parameters.addParameter (param);
@@ -515,6 +524,11 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
         setParamNormalized (kParamTriangleSlopTwo, gps.triangleSlopTwo);
         
 
+        setParamNormalized (kParamGenFreqOne,
+                            plainParamToNormalized (kParamGenFreqOne, gps.genFreqOne));
+        setParamNormalized (kParamGenFreqTwo,
+                            plainParamToNormalized (kParamGenFreqTwo, gps.genFreqTwo));
+        
 		setParamNormalized (kParamFilterType,
 		                    plainParamToNormalized (kParamFilterType, gps.filterType));
         setParamNormalized (kParamOscType,

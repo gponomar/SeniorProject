@@ -60,9 +60,11 @@ Processor::Processor () : voiceProcessor (nullptr)
 	paramState.velToLevel = 1.;
 
 	paramState.noiseVolume = 0.1;
+    paramState.squareVolume = 0.1;
 	paramState.sinusVolume = 1.;
 	paramState.triangleVolume= 1.;
     paramState.noiseVolumeTwo = 0.1;
+    paramState.squareVolumeTwo = 0.1;
     paramState.sinusVolumeTwo = 1.;
     paramState.triangleVolumeTwo = 1.;
 	paramState.releaseTime = 0.;
@@ -86,6 +88,11 @@ Processor::Processor () : voiceProcessor (nullptr)
     paramState.filterTwoType = 0;
     paramState.freqTwoModDepth = 1.;
 	paramState.bypassSNA = 0;
+    paramState.oscType = 0;
+    paramState.oscTypeTwo = 0;
+    paramState.genFreqOne = 0.5; //not sure if we want .5
+    paramState.genFreqTwo = 0.5;
+    
 }
 
 //-----------------------------------------------------------------------------
@@ -142,6 +149,9 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 		if (paramState.noiseBuffer == nullptr)
 			paramState.noiseBuffer = new BrownNoise<float> ((int32)processSetup.sampleRate,
 			                                                (float)processSetup.sampleRate);
+        if (paramState.noiseBufferTwo == nullptr)
+            paramState.noiseBufferTwo = new BrownNoise<float> ((int32)processSetup.sampleRate,
+                                                            (float)processSetup.sampleRate);
 		if (voiceProcessor == nullptr)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
@@ -176,6 +186,11 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 			delete paramState.noiseBuffer;
 		}
 		paramState.noiseBuffer = nullptr;
+        if (paramState.noiseBufferTwo)
+        {
+            delete paramState.noiseBufferTwo;
+        }
+        paramState.noiseBufferTwo = nullptr;
 	}
 	return AudioEffect::setActive (state);
 }
@@ -305,6 +320,16 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
                         case kParamTriangleSlopTwo:
                         {
                             paramState.triangleSlopTwo = value;
+                            break;
+                        }
+                        case kParamGenFreqOne:
+                        {
+                            paramState.genFreqOne = value;
+                            break;
+                        }
+                        case kParamGenFreqTwo:
+                        {
+                            paramState.genFreqTwo = value;
                             break;
                         }
 						case kParamFilterType:

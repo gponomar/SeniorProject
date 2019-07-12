@@ -85,6 +85,10 @@ tresult GlobalParameterState::setState (IBStream* stream)
 
 	if (version >= 1)
 	{
+        if (!s.readDouble (genFreqOne))
+            return kResultFalse;
+        if (!s.readDouble (genFreqTwo))
+            return kResultFalse;
 		if (!s.readInt8 (filterType))
 			return kResultFalse;
 		if (!s.readDouble (filterFreq))
@@ -102,6 +106,10 @@ tresult GlobalParameterState::setState (IBStream* stream)
         if (!s.readDouble (filterTwoFreq))
             return kResultFalse;
         if (!s.readDouble (filterTwoQ))
+            return kResultFalse;
+        if (!s.readInt8 (oscType))
+            return kResultFalse;
+        if (!s.readInt8 (oscTypeTwo))
             return kResultFalse;
 	}
 	if (version >= 2)
@@ -185,8 +193,16 @@ tresult GlobalParameterState::getState (IBStream* stream)
         return kResultFalse;
     if (!s.writeDouble (filterTwoQ))
         return kResultFalse;
+    if (!s.writeInt8 (oscType))
+        return kResultFalse;
+    if (!s.writeInt8 (oscTypeTwo))
+        return kResultFalse;
 
 	// version 2
+    if (!s.readDouble (genFreqOne))
+        return kResultFalse;
+    if (!s.readDouble (genFreqTwo))
+        return kResultFalse;
 	if (!s.writeDouble (masterVolume))
 		return kResultFalse;
 	if (!s.writeDouble (masterTuning))
