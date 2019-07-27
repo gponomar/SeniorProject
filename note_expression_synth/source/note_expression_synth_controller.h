@@ -108,6 +108,8 @@ enum
     kParamGenFreqOne,
     kParamGenFreqTwo,
 
+	kParamFreqModOn,
+
     
 	kNumGlobalParameters
     
@@ -173,7 +175,8 @@ public:
         kSustainVolumeModTypeID,
         kDecayTimeModTypeID,
         kGenFreqOneTypeID,
-        kGenFreqTwoTypeID
+        kGenFreqTwoTypeID,
+		kFreqModOnTypeID
         
 	};
 

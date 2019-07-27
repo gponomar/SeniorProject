@@ -105,6 +105,8 @@ struct GlobalParameterState
     ParamValue filterTwoFreq;        // [-1, +1]
     ParamValue filterTwoQ;            // [-1, +1]
     ParamValue freqTwoModDepth;    // [-1, +1]
+
+	ParamValue freqModOn;		// [0, +1]
 	
 	int8 filterType;			// [0, 1, 2]
     int8 oscType;            // [0, 1, 2, 3]
@@ -157,6 +159,7 @@ enum VoiceParameters
     kSquareVolumeTwo,
     kGenFreqOne,
     kGenFreqTwo,
+	kFreqModOn,
 
 	kNumParameters
 };
@@ -251,6 +254,7 @@ protected:
 	ParamValue currentLPQ;
     ParamValue currentGenFreqOne;
     ParamValue currentGenFreqTwo;
+	ParamValue currentFreqModOn;
     
     ParamValue currentLPOneFreq;
     ParamValue currentLPOneQ;
@@ -493,6 +497,11 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
         {
             VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kDecayTimeMod, 2 * (value - 0.5));
         }
+
+		case Controller::kFreqModOnTypeID:
+		{
+			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kFreqModOn, value);
+		}
 		//------------------------------
 		default:
 		{
@@ -778,67 +787,108 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
             //STOPPED SECOND GENERATOR HERE
 			SamplePrecision sample;
             SamplePrecision sampleTwo;
-            
-            SamplePrecision oscTwo = (SamplePrecision)sin (n * triangleFreqTwo + trianglePhaseTwo);
-            if (this->globalParameters->oscTypeTwo == 0)
-            {
-                sampleTwo = (SamplePrecision)(sin (n * sinusFreqTwo + sinusPhaseTwo) * currentSinusVolumeTwo);
-            }
-            else if (this->globalParameters->oscTypeTwo == 1)
-            {
-                sampleTwo = (SamplePrecision)((::floor (oscTwo) + 0.5) * currentSquareVolumeTwo);
-            }
-            else if (this->globalParameters->oscTypeTwo == 2)
-            {
-                sampleTwo = (SamplePrecision)((oscTwo - ::fabs(sin (n * triangleFreqTwo + trianglePhaseTwo + 1 + currentTriangleSlopeTwo))) * currentTriangleVolumeTwo);
-            }
-            else if (this->globalParameters->oscTypeTwo == 3)
-            {
-                sampleTwo = (SamplePrecision)(this->globalParameters->noiseBufferTwo->at (noisePosTwo) * currentNoiseVolumeTwo);
-            }
-        
-            
-            
-            //filter two
-            if (filterTwoFreqRamp != 0. || filterTwoQRamp != 0.)
-            {
-                filterTwo->setFreqAndQ (VoiceStatics::freqLogScale.scale (currentLPTwoFreq), 1. - currentLPTwoQ);
-                currentLPTwoFreq += filterTwoFreqRamp;
-                currentLPTwoQ += filterTwoQRamp;
-            }
-            sampleTwo = (SamplePrecision)filterTwo->process (sampleTwo);
-            
-            
-            SamplePrecision osc = (SamplePrecision)sin (n * triangleFreq + trianglePhase);
-            if (this->globalParameters->oscType == 0)
-            {
-                sample = (SamplePrecision)(sin (n * sinusFreq + sinusPhase) * currentSinusVolume);
-            }
-            else if (this->globalParameters->oscType == 1)
-            {
-                sample = (SamplePrecision)((::floor (osc) + 0.5) * currentSquareVolume);
-            }
-            else if (this->globalParameters->oscType == 2)
-            {
-                sample = (SamplePrecision)((osc - ::fabs(sin (n * triangleFreq + trianglePhase + 1 + currentTriangleSlope))) * currentTriangleVolume);
-            }
-            else if (this->globalParameters->oscType == 3)
-            {
-                sample = (SamplePrecision)(this->globalParameters->noiseBuffer->at (noisePos) * currentNoiseVolume);
-            }
 
+			if (this->globalParameters->freqModOn >= 0 && this->globalParameters->freqModOn < .5) {
+				SamplePrecision oscTwo = (SamplePrecision)sin(n * triangleFreqTwo + trianglePhaseTwo);
+				if (this->globalParameters->oscTypeTwo == 0)
+				{
+					sampleTwo = (SamplePrecision)(sin(n * sinusFreqTwo + sinusPhaseTwo) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 1)
+				{
+					sampleTwo = (SamplePrecision)((::floor(oscTwo) + 0.5) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 2)
+				{
+					sampleTwo = (SamplePrecision)((oscTwo - ::fabs(sin(n * triangleFreqTwo + trianglePhaseTwo + 1 + currentTriangleSlopeTwo))) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 3)
+				{
+					sampleTwo = (SamplePrecision)(this->globalParameters->noiseBufferTwo->at(noisePosTwo) * currentSinusVolumeTwo);
+				}
+
+				SamplePrecision osc = (SamplePrecision)sin(n * triangleFreq + trianglePhase + sampleTwo);
+				if (this->globalParameters->oscType == 0)
+				{
+					sample = (SamplePrecision)(sin(n * sinusFreq + sinusPhase + sampleTwo) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 1)
+				{
+					sample = (SamplePrecision)((::floor(osc) + 0.5) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 2)
+				{
+					sample = (SamplePrecision)((osc - ::fabs(sin(n * triangleFreq + trianglePhase + 1 + currentTriangleSlope))) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 3)
+				{
+					sample = (SamplePrecision)(this->globalParameters->noiseBuffer->at(noisePos) * currentSinusVolume);
+				}
+			}
+			else {
+				SamplePrecision oscTwo = (SamplePrecision)sin(n * triangleFreqTwo + trianglePhaseTwo);
+				if (this->globalParameters->oscTypeTwo == 0)
+				{
+					sampleTwo = (SamplePrecision)(sin(n * sinusFreqTwo + sinusPhaseTwo) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 1)
+				{
+					sampleTwo = (SamplePrecision)((::floor(oscTwo) + 0.5) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 2)
+				{
+					sampleTwo = (SamplePrecision)((oscTwo - ::fabs(sin(n * triangleFreqTwo + trianglePhaseTwo + 1 + currentTriangleSlopeTwo))) * currentSinusVolumeTwo);
+				}
+				else if (this->globalParameters->oscTypeTwo == 3)
+				{
+					sampleTwo = (SamplePrecision)(this->globalParameters->noiseBufferTwo->at(noisePosTwo) * currentSinusVolumeTwo);
+				}
+
+
+
+				//filter two
+				if (filterTwoFreqRamp != 0. || filterTwoQRamp != 0.)
+				{
+					filterTwo->setFreqAndQ(VoiceStatics::freqLogScale.scale(currentLPTwoFreq), 1. - currentLPTwoQ);
+					currentLPTwoFreq += filterTwoFreqRamp;
+					currentLPTwoQ += filterTwoQRamp;
+				}
+				sampleTwo = (SamplePrecision)filterTwo->process(sampleTwo);
+
+
+				SamplePrecision osc = (SamplePrecision)sin(n * triangleFreq + trianglePhase);
+				if (this->globalParameters->oscType == 0)
+				{
+					sample = (SamplePrecision)(sin(n * sinusFreq + sinusPhase) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 1)
+				{
+					sample = (SamplePrecision)((::floor(osc) + 0.5) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 2)
+				{
+					sample = (SamplePrecision)((osc - ::fabs(sin(n * triangleFreq + trianglePhase + 1 + currentTriangleSlope))) * currentSinusVolume);
+				}
+				else if (this->globalParameters->oscType == 3)
+				{
+					sample = (SamplePrecision)(this->globalParameters->noiseBuffer->at(noisePos) * currentSinusVolume);
+				}
+
+
+				//filter
+				if (filterOneFreqRamp != 0. || filterOneQRamp != 0.)
+				{
+					filterOne->setFreqAndQ(VoiceStatics::freqLogScale.scale(currentLPOneFreq), 1. - currentLPOneQ);
+					currentLPOneFreq += filterOneFreqRamp;
+					currentLPOneQ += filterOneQRamp;
+				}
+				sample = (SamplePrecision)filterOne->process(sample);
+
+				//add together two samples after two filters
+				sample += sampleTwo;
+			}
             
-            //filter
-            if (filterOneFreqRamp != 0. || filterOneQRamp != 0.)
-            {
-                filterOne->setFreqAndQ (VoiceStatics::freqLogScale.scale (currentLPOneFreq), 1. - currentLPOneQ);
-                currentLPOneFreq += filterOneFreqRamp;
-                currentLPOneQ += filterOneQRamp;
-            }
-            sample = (SamplePrecision)filterOne->process (sample);
             
-            //add together two samples after two filters
-            sample += sampleTwo;
             
 			n++;
 			

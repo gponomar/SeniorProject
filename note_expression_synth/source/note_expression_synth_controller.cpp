@@ -296,6 +296,10 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         param = new RangeParameter (USTRING("Triangle Slop Two"), kParamTriangleSlopTwo, USTRING("%"), 0, 100, 50);
         param->setPrecision (0);
         parameters.addParameter (param);
+
+		param = new RangeParameter (USTRING("Freq Mod On"), kParamFreqModOn, USTRING("%"), 0, 1, 0);
+		param->setPrecision(0);
+		parameters.addParameter(param);
 		
         auto* OscTypeParam = new StringListParameter (USTRING("Osc Type"), kParamOscType);
         OscTypeParam->appendString (USTRING("Sinus"));
@@ -446,6 +450,9 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterOneQModTypeID, String ("Filter One Q Modulation"), String ("One Q Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
         noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterOneTypeTypeID, String ("Filter OneType"), String ("Flt One Type"), nullptr, -1, getParameterObject (kParamFilterOneType), NoteExpressionTypeInfo::kIsBipolar));
         
+		//FREQUENCY MOD
+		noteExpressionTypes.addNoteExpressionType(new RangeNoteExpressionType(kFreqModOnTypeID, String("Frequency Modulation"), String("Freq Mod"), nullptr, -1, 0, 0, 1, NoteExpressionTypeInfo::kIsBipolar, 0));
+
         auto rNoteExpTwo = new RangeNoteExpressionType (kFilterTwoFreqModTypeID, String ("Filter Two Frequency Modulation"), String ("Freq Two Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
         rNoteExpTwo->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
         noteExpressionTypes.addNoteExpressionType (rNoteExpTwo);
@@ -547,6 +554,8 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
                             plainParamToNormalized (kParamFilterTwoType, gps.filterTwoType));
         setParamNormalized (kParamFilterTwoFreq, gps.filterTwoFreq);
         setParamNormalized (kParamFilterTwoQ, gps.filterTwoQ);
+
+		setParamNormalized(kParamFreqModOn, gps.freqModOn);
 
 		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
 
