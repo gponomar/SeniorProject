@@ -109,6 +109,7 @@ enum
     kParamGenFreqTwo,
 
 	kParamFreqModOn,
+    kParamStereoMs,
 
     
 	kNumGlobalParameters
@@ -176,7 +177,8 @@ public:
         kDecayTimeModTypeID,
         kGenFreqOneTypeID,
         kGenFreqTwoTypeID,
-		kFreqModOnTypeID
+		kFreqModOnTypeID,
+        kStereoMsTypeID
         
 	};
 

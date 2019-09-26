@@ -89,6 +89,8 @@ tresult GlobalParameterState::setState (IBStream* stream)
             return kResultFalse;
         if (!s.readDouble (genFreqTwo))
             return kResultFalse;
+        if (!s.readDouble (stereoMs))
+            return kResultFalse;
 		if (!s.readInt8 (filterType))
 			return kResultFalse;
 		if (!s.readDouble (filterFreq))
@@ -206,6 +208,8 @@ tresult GlobalParameterState::getState (IBStream* stream)
     if (!s.readDouble (genFreqOne))
         return kResultFalse;
     if (!s.readDouble (genFreqTwo))
+        return kResultFalse;
+    if (!s.readDouble (stereoMs))
         return kResultFalse;
 	if (!s.writeDouble (masterVolume))
 		return kResultFalse;

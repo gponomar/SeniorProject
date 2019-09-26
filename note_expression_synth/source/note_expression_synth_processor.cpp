@@ -92,6 +92,7 @@ Processor::Processor () : voiceProcessor (nullptr)
     paramState.oscTypeTwo = 0;
     paramState.genFreqOne = 0.5; //not sure if we want .5
     paramState.genFreqTwo = 0.5;
+    paramState.stereoMs = 0.;
 	paramState.freqModOn = 1.0;
     
 }
@@ -331,6 +332,11 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
                         case kParamGenFreqTwo:
                         {
                             paramState.genFreqTwo = value;
+                            break;
+                        }
+                        case kParamStereoMs:
+                        {
+                            paramState.stereoMs = value;
                             break;
                         }
 						case kParamFreqModOn:

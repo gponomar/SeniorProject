@@ -125,14 +125,20 @@
 		</view>
 		<view autosize="left right top " back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="30, 170" round-rect-radius="6" shadow-color="~ BlackCColor" size="65, 25" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="true" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Generator 2" transparent="true" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
 		<view autosize="left right top " back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="30, 40" round-rect-radius="6" shadow-color="~ BlackCColor" size="75, 25" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="true" text-alignment="left" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Generator 1" transparent="true" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+		<view background-color="~ BlackCColor" background-color-draw-style="filled and stroked" bitmap="groupframe" class="CViewContainer" mouse-enabled="true" opacity="1" origin="290, 40" size="105, 125" transparent="false" wants-focus="false">
+			<view autosize="left right top " back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="20, 0" round-rect-radius="6" shadow-color="~ BlackCColor" size="40, 25" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="true" text-alignment="left" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="Stereo" transparent="true" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+			<view back-color="~ BlackCColor" background-offset="0, 0" class="CTextLabel" default-value="0.5" font="~ NormalFontSmaller" font-antialias="true" font-color="Light Grey" frame-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="30, 35" round-rect-radius="6" shadow-color="~ RedCColor" size="42, 15" style-3D-in="false" style-3D-out="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="ms" transparent="true" value-precision="2" wants-focus="false" wheel-inc-value="0.1"/>
+			<view angle-range="270" angle-start="135" bitmap="knob" class="CAnimKnob" control-tag="StereoMs" default-value="0" height-of-one-image="42" inverse-bitmap="false" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="30, 50" size="42, 42" sub-pixmaps="80" tooltip="Stereo (ms)" transparent="false" value-inset="0" wants-focus="true" wheel-inc-value="0.1" zoom-factor="1.5"/>
+			<view back-color="~ BlackCColor" background-offset="0, 0" class="CTextEdit" control-tag="StereoMs" default-value="0" font="~ NormalFontSmaller" font-antialias="true" font-color="Light Grey" frame-color="~ BlackCColor" frame-width="1" immediate-text-change="false" max-value="300" min-value="0" mouse-enabled="true" opacity="1" origin="30, 90" round-rect-radius="6" secure-style="false" shadow-color="~ RedCColor" size="42, 15" style-3D-in="false" style-3D-out="false" style-doubleclick="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="false" style-shadow-text="false" text-alignment="center" text-inset="0, 0" text-rotation="0" text-shadow-offset="1, 1" title="0" tooltip="Filter Frequency (Hz)" transparent="true" value-precision="2" wants-focus="true" wheel-inc-value="0.1"/>
+		</view>
 	</template>
 	<custom>
-		<attributes Path="D:\Documents\School\snrproj\VST_SDK\VST3_SDK\public.sdk\samples\vst\note_expression_synth\resource\note_expression_synth.uidesc" name="VST3Editor"/>
+		<attributes Path="/Users/GracieP/Desktop/School/2018-2019/Senior Project/vst3sdk/public.sdk/samples/vst/note_expression_synth/resource/note_expression_synth.uidesc" name="VST3Editor"/>
 		<attributes name="FocusDrawing"/>
 		<attributes Size="5, 5" name="UIGridController"/>
 		<attributes SelectedTemplate="Editor" name="UITemplateController"/>
 		<attributes name="UIAttributesController"/>
-		<attributes EditViewScale="2" EditorSize="0, 0, 974.9, 614.4" SplitViewSize_0_0="0.7562882392929980435170023156388197094202" SplitViewSize_0_1="0.2090414683888511260256848345306934788823" SplitViewSize_1_0="0.5013596193065941175603938972926698625088" SplitViewSize_1_1="0.4911624745071380138128347425663378089666" SplitViewSize_2_0="0.7580264642527438923025329131633043289185" SplitViewSize_2_1="0.2359216329879987861239953872427577152848" TabSwitchValue="0" Version="1" name="UIEditController"/>
+		<attributes EditViewScale="0.5" EditorSize="0, 0, 467.9, 422.9" SplitViewSize_0_0="0.6626354245401865350473258331476245075464" SplitViewSize_0_1="0.2872260015117157894160015985107747837901" SplitViewSize_1_0="0.5064247921390778728323311952408403158188" SplitViewSize_1_1="0.4837490551776266189953901175613282248378" SplitViewSize_2_0="0.677495191280188091553782214759849011898" SplitViewSize_2_1="0.3098952767685402842623432206892175599933" TabSwitchValue="0" Version="1" name="UIEditController"/>
 		<attributes SelectedRow="15" name="UIViewCreatorDataSource"/>
 		<attributes SelectedRow="1" name="UIBitmapsDataSource"/>
 		<attributes SelectedRow="-1" name="UITagsDataSource"/>
@@ -157,7 +163,7 @@
 		<control-tag name="AttackTime" tag="17"/>
 		<control-tag name="BypassSNA" tag="5"/>
 		<control-tag name="DecayTime" tag="18"/>
-		<control-tag name="EnableMPE" tag="40"/>
+		<control-tag name="EnableMPE" tag="41"/>
 		<control-tag name="FilterFrequency" tag="8"/>
 		<control-tag name="FilterOneFrequency" tag="21"/>
 		<control-tag name="FilterTwoFrequency" tag="25"/>
@@ -179,7 +185,7 @@
 		<control-tag name="IAALoadPreset" tag="5001"/>
 		<control-tag name="IAASavePreset" tag="5002"/>
 		<control-tag name="IAASettings" tag="5000"/>
-		<control-tag name="MIDILearn" tag="39"/>
+		<control-tag name="MIDILearn" tag="40"/>
 		<control-tag name="MasterTuning" tag="11"/>
 		<control-tag name="MasterVolume" tag="10"/>
 		<control-tag name="NoiseVolume" tag="1"/>
@@ -193,6 +199,7 @@
 		<control-tag name="SinusVolumeTwo" tag="29"/>
 		<control-tag name="SquareVolume" tag="16"/>
 		<control-tag name="SquareVolumeTwo" tag="33"/>
+		<control-tag name="StereoMs" tag="39"/>
 		<control-tag name="SustainTime" tag="19"/>
 		<control-tag name="TriangleSlop" tag="6"/>
 		<control-tag name="TriangleSlopTwo" tag="32"/>

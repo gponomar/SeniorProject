@@ -241,6 +241,9 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Master Volume"), kParamMasterVolume, USTRING("%"), 0, 100, 80);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        param = new RangeParameter (USTRING("Stereo ms"), kParamStereoMs, USTRING("%"), 0, 300, 0);
+        param->setPrecision (2);
+        parameters.addParameter (param);
 
 		param = new RangeParameter (USTRING("Master Tuning"), kParamMasterTuning, USTRING("cent"), -200, 200, 0);
 		param->setPrecision (0);
@@ -337,6 +340,8 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Frequency Mod Depth"), kParamFilterFreqModDepth, USTRING("%"), -100, 100, 100);
 		param->setPrecision (1);
 		parameters.addParameter (param);
+        
+        
 
 		param = parameters.addParameter (USTRING("Filter Q"), nullptr, 0, 0, ParameterInfo::kCanAutomate, kParamFilterQ);
 		param->setPrecision (2);
@@ -415,6 +420,8 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		tuningNoteExpression->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIXMovement);
 		noteExpressionTypes.addNoteExpressionType (tuningNoteExpression);
 		
+        noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kStereoMsTypeID, String ("Stereo ms"), String ("Stereo ms"), String ("%"), -1, getParameterObject (kParamStereoMs), NoteExpressionTypeInfo::kIsAbsolute));
+        
 		auto noteExp = new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
         
@@ -535,6 +542,7 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
                             plainParamToNormalized (kParamGenFreqOne, gps.genFreqOne));
         setParamNormalized (kParamGenFreqTwo,
                             plainParamToNormalized (kParamGenFreqTwo, gps.genFreqTwo));
+        setParamNormalized (kParamStereoMs, gps.stereoMs);
         
 		setParamNormalized (kParamFilterType,
 		                    plainParamToNormalized (kParamFilterType, gps.filterType));

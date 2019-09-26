@@ -63,7 +63,7 @@ struct GlobalParameterState
 {
 	BrownNoise<float>* noiseBuffer;
     BrownNoise<float>* noiseBufferTwo;
-
+    
 	ParamValue masterVolume;	// [0, +1]
 	ParamValue masterTuning;	// [-1, +1]
 	ParamValue velToLevel;		// [0, +1]
@@ -94,6 +94,8 @@ struct GlobalParameterState
     ParamValue genFreqOne;        // [-1, +1]
     ParamValue genFreqTwo;        // [-1, +1]
     
+    ParamValue stereoMs;            // [0, 300]
+    
 	ParamValue filterFreq;		// [-1, +1]
 	ParamValue filterQ;			// [-1, +1]
 	ParamValue freqModDepth;	// [-1, +1]
@@ -119,6 +121,9 @@ struct GlobalParameterState
 
 	tresult setState (IBStream* stream);
 	tresult getState (IBStream* stream);
+    // int outputQueue[1000];
+    int *outputQueue;
+    int msBuffer;
 };
 
 //-----------------------------------------------------------------------------
@@ -160,10 +165,14 @@ enum VoiceParameters
     kGenFreqOne,
     kGenFreqTwo,
 	kFreqModOn,
+    kStereoMs,
 
 	kNumParameters
+    
+    
 };
-
+    
+    
 //-----------------------------------------------------------------------------
 class VoiceStatics
 {
@@ -265,6 +274,7 @@ protected:
 	ParamValue noteOnVolumeRamp;
     ParamValue noteOnVolumeRampDecay;
 	ParamValue noteOffVolumeRamp;
+    ParamValue stereoMs;
 };
 
 //-----------------------------------------------------------------------------
@@ -430,7 +440,12 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
             break;
             
         }
+        case Controller::kStereoMsTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue (kStereoMs, (value - 0.5) * 2.);
+            break;
             
+        }
             
         case Controller::kFilterTwoFreqModTypeID:
         {
@@ -512,6 +527,9 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 }
 
 //-----------------------------------------------------------------------------
+    
+
+
 template<class SamplePrecision>
 bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 numSamples)
 {
@@ -626,6 +644,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
     ParamValue filterTwoQRamp = 0.;
 	ParamValue triangleSlopeRamp = 0.;
     ParamValue triangleSlopeRampTwo = 0.;
+    // ParamValue stereoRamp = 0.;
 	ParamValue rampTime = std::max<ParamValue> ((ParamValue)numSamples, (this->sampleRate * 0.005));
 	
 	ParamValue wantedVolume = VoiceStatics::normalizedLevel2Gain ((float)Bound (0.0, 1.0, this->globalParameters->masterVolume * levelFromVel + this->values[kVolumeMod]));
@@ -904,9 +923,21 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 			}
 			sample = (SamplePrecision)filter->process (sample);
 
+            
+            
 			// store in output
 			outputBuffers[0][i] += (SamplePrecision)(sample * currentPanningLeft * currentVolume);
-			outputBuffers[1][i] += (SamplePrecision)(sample * currentPanningRight * currentVolume);
+            
+            //STEREO????
+            
+            realloc(this->globalParameters->outputQueue, i+this->globalParameters->msBuffer);
+            this->globalParameters->outputQueue[i+this->globalParameters->msBuffer] += (SamplePrecision)(sample * currentPanningRight * currentVolume);
+
+            outputBuffers[1][i] += this->globalParameters->outputQueue[i];
+            
+//
+//                        outputBuffers[1][i] += (SamplePrecision)(sample * currentPanningRight * currentVolume);
+            
 
 			// advance noise
 			noisePos += noiseStep;
@@ -956,7 +987,8 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
 void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tuning, int32 sampleOffset, int32 nId)
-{	
+{
+    
 	currentVolume = 0;
 	this->values[kVolumeMod] = 0;
 	levelFromVel = 1.f + this->globalParameters->velToLevel * (velocity - 1.);
@@ -1049,6 +1081,15 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
     
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn (_pitch, velocity, tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
+    
+    this->globalParameters->msBuffer = (44100/1000) * this->globalParameters->stereoMs;
+    this->globalParameters->outputQueue = (int*) malloc(this->globalParameters->msBuffer+1);
+    if (this->globalParameters->outputQueue == NULL) {
+        exit(1);
+    }
+    for (int x = 0; x < this->globalParameters->msBuffer; x++){
+        this->globalParameters->outputQueue[x] += 0;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -1096,6 +1137,7 @@ void Voice<SamplePrecision>::reset ()
     this->values[kDecayTimeMod] = 0.;
     this->values[kGenFreqOne] = 0.;
     this->values[kGenFreqTwo] = 0.5;
+    stereoMs = this->values[kStereoMs] = 0.;
 	currentPanningLeft = this->values[kPanningLeft] = 1.;
 	currentPanningRight = this->values[kPanningRight] = 1.;
 	currentNoiseVolume = this->values[kNoiseVolume] = 0.5;
