@@ -45,6 +45,7 @@
 #include "pluginterfaces/base/futils.h"
 #include <cmath>
 #include <algorithm>
+#include <queue>
 
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
@@ -121,9 +122,6 @@ struct GlobalParameterState
 
 	tresult setState (IBStream* stream);
 	tresult getState (IBStream* stream);
-    // int outputQueue[1000];
-    int *outputQueue;
-    int msBuffer;
 };
 
 //-----------------------------------------------------------------------------
@@ -234,6 +232,9 @@ protected:
 	Filter* filter;
     Filter* filterOne;
     Filter* filterTwo;
+
+	std::queue<SamplePrecision> delayQueue;
+	int current_ms = 0;
 
 	SamplePrecision trianglePhase;
 	SamplePrecision sinusPhase;
@@ -924,19 +925,29 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 			sample = (SamplePrecision)filter->process (sample);
 
             
-            
 			// store in output
 			outputBuffers[0][i] += (SamplePrecision)(sample * currentPanningLeft * currentVolume);
             
-            //STEREO????
-            
-            realloc(this->globalParameters->outputQueue, i+this->globalParameters->msBuffer);
-            this->globalParameters->outputQueue[i+this->globalParameters->msBuffer] += (SamplePrecision)(sample * currentPanningRight * currentVolume);
+            //STEREO
 
-            outputBuffers[1][i] += this->globalParameters->outputQueue[i];
+			//Change in Delay
+			if (Voice::current_ms != int(300 * this->globalParameters->stereoMs)) {
+				Voice::current_ms = int(300 * this->globalParameters->stereoMs);
+				while (!Voice::delayQueue.empty()) {
+					Voice::delayQueue.pop();
+				}
+				for (int i = 0; i < 44100 * (300 * this->globalParameters->stereoMs / 1000.00); i++) {
+					Voice::delayQueue.push((SamplePrecision) 0);
+				}
+			}
             
-//
-//                        outputBuffers[1][i] += (SamplePrecision)(sample * currentPanningRight * currentVolume);
+			Voice::delayQueue.push((SamplePrecision)(sample * currentPanningRight * currentVolume));
+            //this->globalParameters->outputQueue[i+this->globalParameters->msBuffer] += (SamplePrecision)(sample * currentPanningRight * currentVolume
+
+
+
+            outputBuffers[1][i] += Voice::delayQueue.front();
+			Voice::delayQueue.pop();
             
 
 			// advance noise
@@ -1063,11 +1074,9 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
         if (currentVolume)
             noteOnVolumeRamp *= currentVolume;
         //////////////////-----------------------------
-    //}
-    //else
-    //{
+
     ParamValue timeFactorDecay;
-        //////deeeecccccaaaaaayyyy---------------------------
+        //////Decay------------------------------------
         if (this->values[kDecayTimeMod] == 0)
             timeFactorDecay = 1;
         else
@@ -1081,15 +1090,6 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
     
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn (_pitch, velocity, tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
-    
-    this->globalParameters->msBuffer = (44100/1000) * this->globalParameters->stereoMs;
-    this->globalParameters->outputQueue = (int*) malloc(this->globalParameters->msBuffer+1);
-    if (this->globalParameters->outputQueue == NULL) {
-        exit(1);
-    }
-    for (int x = 0; x < this->globalParameters->msBuffer; x++){
-        this->globalParameters->outputQueue[x] += 0;
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -1098,6 +1098,14 @@ void Voice<SamplePrecision>::noteOff (ParamValue velocity, int32 sampleOffset)
 {
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOff (velocity, sampleOffset);
 	this->noteOffSampleOffset++;
+
+	while (!Voice::delayQueue.empty()) {
+		Voice::delayQueue.pop();
+	}
+
+	for (int i = 0; i < 44100 * (300 * this->globalParameters->stereoMs / 1000.00); i++) {
+		Voice::delayQueue.push((SamplePrecision)0);
+	}
 
 	ParamValue timeFactor;
 	if (this->values[kReleaseTimeMod] == 0)
