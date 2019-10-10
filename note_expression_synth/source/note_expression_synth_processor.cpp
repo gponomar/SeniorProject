@@ -39,6 +39,7 @@
 #include "note_expression_synth_controller.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "note_expression_synth_voice.h"
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -351,23 +352,12 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 						}
                         case kParamSaveState:
                         {
-//                            std::ofstream myfile("/Users/GracieP/TA 349/values.txt");
-//                            //myfile.open("testing2.txt");
-//                            std::string data(std::to_string(paramState.genFreqOne));
-//                            myfile << data;
-//                            std::string data1(std::to_string(paramState.masterVolume));
-//                            myfile << data1;
-                            //Voice<SamplePrecision>::save();
-                            //VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset ();
-                            //myfile.close();
-                            // paramState.saveState = value;
-                            paramState.freqModOn= value;
+							voice.save();
                             break;
                         }
                         case kParamLoadState:
                         {
-                            //paramState.loadState = value;
-                            paramState.freqModOn = value;
+							voice.load();
                             break;
                         }
 						case kParamFilterType:

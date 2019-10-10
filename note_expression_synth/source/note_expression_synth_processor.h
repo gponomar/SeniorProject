@@ -65,6 +65,8 @@ public:
 	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
+
+	Voice<float> voice;
 	
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new Processor (); }
 

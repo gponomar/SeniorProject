@@ -495,7 +495,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		midiCCMapping[ControllerNumbers::kCtrlModWheel] = kParamFilterFreqModDepth;
 		midiCCMapping[ControllerNumbers::kCtrlFilterCutoff] = kParamFilterFreq;
 		midiCCMapping[ControllerNumbers::kCtrlFilterResonance] = kParamFilterQ;
-        //what is this
+        
         midiCCMapping[ControllerNumbers::kCtrlModWheel] = kParamFilterOneFreqModDepth;
         midiCCMapping[ControllerNumbers::kCtrlFilterCutoff] = kParamFilterOneFreq;
         midiCCMapping[ControllerNumbers::kCtrlFilterResonance] = kParamFilterOneQ;

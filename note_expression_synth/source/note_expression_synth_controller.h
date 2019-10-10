@@ -149,7 +149,7 @@ public:
 	enum NoteExpressionTypeIds
 	{
 		kNoiseVolumeTypeID = kCustomStart,
-        kNoiseVolumeTwoTypeID, //should this also be custom start?
+        kNoiseVolumeTwoTypeID,
 		kFilterFreqModTypeID,
 		kFilterQModTypeID,
 		kSinusVolumeTypeID,

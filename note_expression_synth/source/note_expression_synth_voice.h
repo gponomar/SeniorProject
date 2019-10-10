@@ -48,6 +48,7 @@
 #include <queue>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
@@ -1192,11 +1193,23 @@ void Voice<SamplePrecision>::reset ()
 template<class SamplePrecision>
 void Voice<SamplePrecision>::save ()
 {
-    std::ofstream myfile("/Users/GracieP/TA 349/values.txt");
-    //myfile.open("testing2.txt");
+    std::ofstream myfile("D:/Documents/values.txt");
     std::string data(std::to_string(this->globalParameters->masterVolume));
-    myfile << data;
-        
+	myfile << data;
+	myfile.flush();
+	myfile.close();
+}
+
+template<class SamplePrecision>
+void Voice<SamplePrecision>::load()
+{
+	std::string line;
+	std::ifstream myfile("D:/Documents/values.txt");
+	while (std::getline(myfile, line))
+	{
+		this->globalParameters->masterVolume = std::stof(line);
+	}
+	myfile.close();
 }
 
 //-----------------------------------------------------------------------------
@@ -1206,7 +1219,7 @@ void Voice<SamplePrecision>::setSampleRate (ParamValue sampleRate)
 	filter->setSampleRate (sampleRate);
     filterOne->setSampleRate (sampleRate);
     filterTwo->setSampleRate (sampleRate);
-	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate (sampleRate);
+	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate(sampleRate);
 }
 
 //-----------------------------------------------------------------------------
