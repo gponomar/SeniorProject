@@ -303,6 +303,12 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Freq Mod On"), kParamFreqModOn, USTRING("%"), 0, 1, 0);
 		param->setPrecision(0);
 		parameters.addParameter(param);
+        param = new RangeParameter (USTRING("Freq Mod On"), kParamSaveState, USTRING("%"), 0, 1, 0);
+        param->setPrecision(0);
+        parameters.addParameter(param);
+        param = new RangeParameter (USTRING("Freq Mod On"), kParamLoadState, USTRING("%"), 0, 1, 0);
+        param->setPrecision(0);
+        parameters.addParameter(param);
 		
         auto* OscTypeParam = new StringListParameter (USTRING("Osc Type"), kParamOscType);
         OscTypeParam->appendString (USTRING("Sinus"));
@@ -459,6 +465,11 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         
 		//FREQUENCY MOD
 		noteExpressionTypes.addNoteExpressionType(new RangeNoteExpressionType(kFreqModOnTypeID, String("Frequency Modulation"), String("Freq Mod"), nullptr, -1, 0, 0, 1, NoteExpressionTypeInfo::kIsBipolar, 0));
+        
+        //Save and load state
+        noteExpressionTypes.addNoteExpressionType(new RangeNoteExpressionType(kSaveStateTypeID, String("Save state"), String("Save"), nullptr, -1, 0, 0, 1, NoteExpressionTypeInfo::kIsBipolar, 0));
+        
+        noteExpressionTypes.addNoteExpressionType(new RangeNoteExpressionType(kLoadStateTypeID, String("Load state"), String("Load"), nullptr, -1, 0, 0, 1, NoteExpressionTypeInfo::kIsBipolar, 0));
 
         auto rNoteExpTwo = new RangeNoteExpressionType (kFilterTwoFreqModTypeID, String ("Filter Two Frequency Modulation"), String ("Freq Two Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
         rNoteExpTwo->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
@@ -564,6 +575,8 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
         setParamNormalized (kParamFilterTwoQ, gps.filterTwoQ);
 
 		setParamNormalized(kParamFreqModOn, gps.freqModOn);
+        setParamNormalized(kParamSaveState, gps.saveState);
+        setParamNormalized(kParamLoadState, gps.loadState);
 
 		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
 

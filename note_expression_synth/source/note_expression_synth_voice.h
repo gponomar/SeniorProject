@@ -46,6 +46,8 @@
 #include <cmath>
 #include <algorithm>
 #include <queue>
+#include <iostream>
+#include <fstream>
 
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
@@ -110,6 +112,8 @@ struct GlobalParameterState
     ParamValue freqTwoModDepth;    // [-1, +1]
 
 	ParamValue freqModOn;		// [0, +1]
+    ParamValue saveState;       // [0, 1]
+    ParamValue loadState;
 	
 	int8 filterType;			// [0, 1, 2]
     int8 oscType;            // [0, 1, 2, 3]
@@ -163,6 +167,8 @@ enum VoiceParameters
     kGenFreqOne,
     kGenFreqTwo,
 	kFreqModOn,
+    kSaveState,
+    kLoadState,
     kStereoMs,
 
 	kNumParameters
@@ -218,6 +224,8 @@ public:
 	void noteOff (ParamValue velocity, int32 sampleOffset) SMTG_OVERRIDE;
 	bool process (SamplePrecision* outputBuffers[2], int32 numSamples);
 	void reset () SMTG_OVERRIDE;
+    void save();
+    void load();
 
 	void setNoteExpressionValue (int32 index, ParamValue value) SMTG_OVERRIDE;
 
@@ -265,6 +273,8 @@ protected:
     ParamValue currentGenFreqOne;
     ParamValue currentGenFreqTwo;
 	ParamValue currentFreqModOn;
+    ParamValue currentSaveState;
+    ParamValue currrentLoadState;
     
     ParamValue currentLPOneFreq;
     ParamValue currentLPOneQ;
@@ -518,6 +528,15 @@ void Voice<SamplePrecision>::setNoteExpressionValue (int32 index, ParamValue val
 		{
 			VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kFreqModOn, value);
 		}
+        case Controller::kSaveStateTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kSaveState, value);
+        }
+        case Controller::kLoadStateTypeID:
+        {
+            VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setNoteExpressionValue(kLoadState, value);
+        }
+            
 		//------------------------------
 		default:
 		{
@@ -1168,6 +1187,16 @@ void Voice<SamplePrecision>::reset ()
 	noteOffVolumeRamp = 0.005;
 	
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset ();
+}
+    
+template<class SamplePrecision>
+void Voice<SamplePrecision>::save ()
+{
+    std::ofstream myfile("/Users/GracieP/TA 349/values.txt");
+    //myfile.open("testing2.txt");
+    std::string data(std::to_string(this->globalParameters->masterVolume));
+    myfile << data;
+        
 }
 
 //-----------------------------------------------------------------------------

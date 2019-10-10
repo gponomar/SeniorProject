@@ -109,6 +109,8 @@ enum
     kParamGenFreqTwo,
 
 	kParamFreqModOn,
+    kParamSaveState,
+    kParamLoadState,
     kParamStereoMs,
 
     
@@ -178,6 +180,8 @@ public:
         kGenFreqOneTypeID,
         kGenFreqTwoTypeID,
 		kFreqModOnTypeID,
+        kSaveStateTypeID,
+        kLoadStateTypeID,
         kStereoMsTypeID
         
 	};

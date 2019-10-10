@@ -40,6 +40,8 @@
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 namespace Steinberg {
 namespace Vst {
@@ -94,6 +96,9 @@ Processor::Processor () : voiceProcessor (nullptr)
     paramState.genFreqTwo = 0.5;
     paramState.stereoMs = 0.;
 	paramState.freqModOn = 1.0;
+    paramState.saveState = 0.0;
+    paramState.loadState = 0.0;
+    
     
 }
 
@@ -344,6 +349,27 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.freqModOn = value;
 							break;
 						}
+                        case kParamSaveState:
+                        {
+//                            std::ofstream myfile("/Users/GracieP/TA 349/values.txt");
+//                            //myfile.open("testing2.txt");
+//                            std::string data(std::to_string(paramState.genFreqOne));
+//                            myfile << data;
+//                            std::string data1(std::to_string(paramState.masterVolume));
+//                            myfile << data1;
+                            //Voice<SamplePrecision>::save();
+                            //VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset ();
+                            //myfile.close();
+                            // paramState.saveState = value;
+                            paramState.freqModOn= value;
+                            break;
+                        }
+                        case kParamLoadState:
+                        {
+                            //paramState.loadState = value;
+                            paramState.freqModOn = value;
+                            break;
+                        }
 						case kParamFilterType:
 						{
 							paramState.filterType = std::min<int8> (

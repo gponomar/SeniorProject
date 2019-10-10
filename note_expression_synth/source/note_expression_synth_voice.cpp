@@ -115,6 +115,10 @@ tresult GlobalParameterState::setState (IBStream* stream)
             return kResultFalse;
 		if (!s.readDouble(freqModOn))
 			return kResultFalse;
+        if (!s.readDouble(saveState))
+            return kResultFalse;
+        if (!s.readDouble(loadState))
+            return kResultFalse;
 	}
 	if (version >= 2)
 	{
@@ -203,6 +207,10 @@ tresult GlobalParameterState::getState (IBStream* stream)
         return kResultFalse;
 	if (!s.writeDouble(freqModOn))
 		return kResultFalse;
+    if (!s.writeDouble(saveState))
+        return kResultFalse;
+    if (!s.writeDouble(loadState))
+        return kResultFalse;
 
 	// version 2
     if (!s.readDouble (genFreqOne))
