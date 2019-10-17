@@ -58,45 +58,45 @@ Processor::Processor () : voiceProcessor (nullptr)
 
 	memset (&paramState, 0, sizeof (paramState));
 
-	paramState.masterVolume = 0.5;
-	paramState.masterTuning = 0;
+	paramState.masterVolume = 0.8;
+	paramState.masterTuning = 0.0;
 	paramState.velToLevel = 1.;
 
 	paramState.noiseVolume = 0.1;
     paramState.squareVolume = 0.1;
-	paramState.sinusVolume = 1.;
+	paramState.sinusVolume = 0.8;
 	paramState.triangleVolume= 1.;
     paramState.noiseVolumeTwo = 0.1;
     paramState.squareVolumeTwo = 0.1;
-    paramState.sinusVolumeTwo = 1.;
+    paramState.sinusVolumeTwo = 0.8;
     paramState.triangleVolumeTwo = 1.;
 	paramState.releaseTime = 0.;
 	paramState.attackTime = 0.;
-    paramState.sustainVolume = 0.5;
+    paramState.sustainVolume = 0.8;
     paramState.decayTime = 0.;
-	paramState.sinusDetune = 0;
+	paramState.sinusDetune = 0.0;
 	paramState.triangleSlop = 0.5;
-    paramState.sinusDetuneTwo = 0;
+    paramState.sinusDetuneTwo = 0.0;
     paramState.triangleSlopTwo = 0.5;
-	paramState.filterFreq = 1.;
-	paramState.filterQ = 0.;
+	paramState.filterFreq = 1.0;
+	paramState.filterQ = 0.0;
 	paramState.filterType = 0;
 	paramState.freqModDepth = 1.;
-    paramState.filterOneFreq = 1.;
-    paramState.filterOneQ = 0.;
+    paramState.filterOneFreq = 1.0;
+    paramState.filterOneQ = 0.0;
     paramState.filterOneType = 0;
     paramState.freqOneModDepth = 1.;
-    paramState.filterTwoFreq = 1.;
-    paramState.filterTwoQ = 0.;
+    paramState.filterTwoFreq = 1.0;
+    paramState.filterTwoQ = 0.0;
     paramState.filterTwoType = 0;
     paramState.freqTwoModDepth = 1.;
 	paramState.bypassSNA = 0;
     paramState.oscType = 0;
     paramState.oscTypeTwo = 0;
-    paramState.genFreqOne = 0.5; //not sure if we want .5
-    paramState.genFreqTwo = 0.5;
-    paramState.stereoMs = 0.;
-	paramState.freqModOn = 1.0;
+    paramState.genFreqOne = 0.0;
+    paramState.genFreqTwo = 0.0;
+    paramState.stereoMs = 0.0;
+	paramState.freqModOn = 0.0;
     paramState.saveState = 0.0;
     paramState.loadState = 0.0;
     
@@ -352,12 +352,34 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 						}
                         case kParamSaveState:
                         {
-							voice.save();
+							//voice.save();
+							std::ofstream myfile("D:/Documents/values.txt");
+							std::string data(std::to_string(paramState.masterVolume));
+							myfile << data;
+							myfile.flush();
+							myfile.close();
                             break;
                         }
                         case kParamLoadState:
                         {
-							voice.load();
+							std::string line;
+							std::ifstream myfile("D:/Documents/values.txt");
+							while (std::getline(myfile, line))
+							{
+								paramState.masterVolume = std::stof(line);
+								if (data.outputParameterChanges)
+								{
+									int32 index;
+									IParamValueQueue* queue =
+										data.outputParameterChanges->addParameterData(kParamMasterVolume, index);
+									if (queue)
+									{
+										queue->addPoint(
+											0, paramState.masterVolume, index);
+									}
+								}
+							}
+							myfile.close();
                             break;
                         }
 						case kParamFilterType:

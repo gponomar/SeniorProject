@@ -828,7 +828,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 			SamplePrecision sample;
             SamplePrecision sampleTwo;
 
-			if (this->globalParameters->freqModOn >= 0 && this->globalParameters->freqModOn < .5) {
+			if (this->globalParameters->freqModOn < .5 ) {
 				SamplePrecision oscTwo = (SamplePrecision)sin(n * triangleFreqTwo + trianglePhaseTwo);
 				if (this->globalParameters->oscTypeTwo == 0)
 				{

@@ -303,10 +303,10 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param = new RangeParameter (USTRING("Freq Mod On"), kParamFreqModOn, USTRING("%"), 0, 1, 0);
 		param->setPrecision(0);
 		parameters.addParameter(param);
-        param = new RangeParameter (USTRING("Freq Mod On"), kParamSaveState, USTRING("%"), 0, 1, 0);
+        param = new RangeParameter (USTRING("Save"), kParamSaveState, USTRING("%"), 0, 1, 0);
         param->setPrecision(0);
         parameters.addParameter(param);
-        param = new RangeParameter (USTRING("Freq Mod On"), kParamLoadState, USTRING("%"), 0, 1, 0);
+        param = new RangeParameter (USTRING("Load"), kParamLoadState, USTRING("%"), 0, 1, 0);
         param->setPrecision(0);
         parameters.addParameter(param);
 		
@@ -341,6 +341,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         
 		param = new LogScaleParameter<ParamValue> (USTRING("Filter Frequency"), kParamFilterFreq, VoiceStatics::freqLogScale);
 		param->setPrecision (1);
+		param->setNormalized(1);
 		parameters.addParameter (param);
 
 		param = new RangeParameter (USTRING("Frequency Mod Depth"), kParamFilterFreqModDepth, USTRING("%"), -100, 100, 100);
@@ -361,6 +362,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         
         param = new LogScaleParameter<ParamValue> (USTRING("Filter One Frequency"), kParamFilterOneFreq, VoiceStatics::freqLogScale);
         param->setPrecision (1);
+		param->setNormalized(1);
         parameters.addParameter (param);
         
         param = new RangeParameter (USTRING("Frequency One Mod Depth"), kParamFilterOneFreqModDepth, USTRING("%"), -100, 100, 100);
@@ -377,6 +379,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         parameters.addParameter (filterTwoTypeParam);
         
         param = new LogScaleParameter<ParamValue> (USTRING("Filter Two Frequency"), kParamFilterTwoFreq, VoiceStatics::freqLogScale);
+		param->setNormalized(1);
         param->setPrecision (1);
         parameters.addParameter (param);
         
@@ -414,7 +417,6 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		tuningRangeParam->appendString (USTRING("[-1, +1] Octave"));
 		tuningRangeParam->appendString (USTRING("[-3, +2] Tunes"));
 		parameters.addParameter (tuningRangeParam);
-
 	// Init Note Expression Types
 		auto volumeNoteExp = new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), nullptr, -1, 1., 0., 1., 0, 0);
 		volumeNoteExp->setPhysicalUITypeID(PhysicalUITypeIDs::kPUIPressure);
