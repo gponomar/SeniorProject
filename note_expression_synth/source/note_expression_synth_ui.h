@@ -42,12 +42,14 @@
 #include "vstgui/contrib/keyboardview.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 
+
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 namespace NoteExpressionSynth {
 
 //-----------------------------------------------------------------------------
+
 /** Example Note Expression Audio Controller + User Interface */
 class ControllerWithUI : public Controller, public IMidiLearn, public VSTGUI::VST3EditorDelegate
 {

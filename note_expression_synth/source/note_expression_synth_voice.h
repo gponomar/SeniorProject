@@ -49,6 +49,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "GLSL.h"
+#include <GLFW/glfw3.h>
+#include "loadgl.h"
 
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
@@ -63,6 +69,7 @@ namespace Vst {
 namespace NoteExpressionSynth {
 
 //-----------------------------------------------------------------------------
+
 struct GlobalParameterState
 {
 	BrownNoise<float>* noiseBuffer;
@@ -115,6 +122,7 @@ struct GlobalParameterState
 	ParamValue freqModOn;		// [0, +1]
     ParamValue saveState;       // [0, 1]
     ParamValue loadState;
+	ParamValue filePath;
 	
 	int8 filterType;			// [0, 1, 2]
     int8 oscType;            // [0, 1, 2, 3]
@@ -171,6 +179,7 @@ enum VoiceParameters
     kSaveState,
     kLoadState,
     kStereoMs,
+	kFilePath,
 
 	kNumParameters
     
@@ -213,6 +222,7 @@ public:
 
 \sa Steinberg::Vst::VoiceBase
 */
+
 template<class SamplePrecision>
 class Voice : public VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>
 {
@@ -225,10 +235,15 @@ public:
 	void noteOff (ParamValue velocity, int32 sampleOffset) SMTG_OVERRIDE;
 	bool process (SamplePrecision* outputBuffers[2], int32 numSamples);
 	void reset () SMTG_OVERRIDE;
-    void save();
-    void load();
 
 	void setNoteExpressionValue (int32 index, ParamValue value) SMTG_OVERRIDE;
+
+	ssbo_data mydata;
+
+	double in1;
+
+	float dataA[1024];
+	float dataB[1024];
 
 protected:
 	uint32 n;
@@ -555,7 +570,8 @@ template<class SamplePrecision>
 bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 numSamples)
 {
 	//---compute tuning-------------------------
-
+	//ssbo_CPUMEM.data[0] = temp;
+	//ssbo_CPUMEM.data[1] = temp2;
 	// main tuning
 	ParamValue tuningInHz = 0.;
 	if (this->values[kTuningMod] != 0. || this->globalParameters->masterTuning != 0 || this->tuning != 0)
@@ -942,74 +958,83 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 				currentLPFreq += filterFreqRamp;
 				currentLPQ += filterQRamp;
 			}
-			sample = (SamplePrecision)filter->process (sample);
-
-            
-			// store in output
-			outputBuffers[0][i] += (SamplePrecision)(sample * currentPanningLeft * currentVolume);
-            
-            //STEREO
-
-			//Change in Delay
-			if (Voice::current_ms != int(300 * this->globalParameters->stereoMs)) {
-				Voice::current_ms = int(300 * this->globalParameters->stereoMs);
-				while (!Voice::delayQueue.empty()) {
-					Voice::delayQueue.pop();
-				}
-				for (int i = 0; i < 44100 * (300 * this->globalParameters->stereoMs / 1000.00); i++) {
-					Voice::delayQueue.push((SamplePrecision) 0);
-				}
-			}
-            
-			Voice::delayQueue.push((SamplePrecision)(sample * currentPanningRight * currentVolume));
-            //this->globalParameters->outputQueue[i+this->globalParameters->msBuffer] += (SamplePrecision)(sample * currentPanningRight * currentVolume
-
-
-
-            outputBuffers[1][i] += Voice::delayQueue.front();
-			Voice::delayQueue.pop();
-            
-
-			// advance noise
-			noisePos += noiseStep;
-			if (noisePos > this->globalParameters->noiseBuffer->getSize () - 2)
-			{
-				noisePos = (int32)((float)::rand () / (float)RAND_MAX * (this->globalParameters->noiseBuffer->getSize () - 2) + 2);		
-				noiseStep = -1;
-			}
-			else if (noisePos < 2)
-			{
-				noiseStep = 1;
-			}
-            
-            // advance noise
-            noisePosTwo += noiseStepTwo;
-            if (noisePosTwo > this->globalParameters->noiseBufferTwo->getSize () - 2)
-            {
-                noisePosTwo = (int32)((float)::rand () / (float)RAND_MAX * (this->globalParameters->noiseBufferTwo->getSize () - 2) + 2);
-                noiseStepTwo = -1;
-            }
-            else if (noisePosTwo < 2)
-            {
-                noiseStepTwo = 1;
-            }
-
-			// ramp parameters
-			currentVolume += volumeRamp;
-			currentPanningLeft += panningLeftRamp;
-			currentPanningRight += panningRightRamp;
-			currentNoiseVolume += noiseVolumeRamp;
-            currentNoiseVolumeTwo += noiseVolumeRampTwo;
-			currentSinusVolume += sinusVolumeRamp;
-            currentSinusVolumeTwo += sinusVolumeRampTwo;
-			currentSquareVolume += squareVolumeRamp;
-            currentSquareVolumeTwo += squareVolumeRampTwo;
-			currentTriangleVolume += triangleVolumeRamp;
-            currentTriangleVolumeTwo += triangleVolumeRampTwo;
-			currentTriangleSlope += triangleSlopeRamp;
-            currentTriangleSlopeTwo += triangleSlopeRampTwo;
+			//sample = (SamplePrecision)filter->process (sample);
+			mydata.dataB[i].x = sample;
+			in1 = mydata.dataB[numSamples - 1].x;
+			
 		}
 	}
+
+	Loadgl::Instance()->setVars(VoiceStatics::freqLogScale.scale(currentLPFreq), 1. - currentLPQ, this->globalParameters->filterType, this->sampleRate, in1);
+	Loadgl::Instance()->compute(&mydata);
+
+	for (int32 i = 0; i < numSamples; i++)
+	{
+
+		// store in output
+		outputBuffers[0][i] += (SamplePrecision)(mydata.dataB[i].x * currentPanningLeft * currentVolume);
+
+		//STEREO
+
+		//Change in Delay
+		if (Voice::current_ms != int(300 * this->globalParameters->stereoMs)) {
+			Voice::current_ms = int(300 * this->globalParameters->stereoMs);
+			while (!Voice::delayQueue.empty()) {
+				Voice::delayQueue.pop();
+			}
+			for (int i = 0; i < 44100 * (300 * this->globalParameters->stereoMs / 1000.00); i++) {
+				Voice::delayQueue.push((SamplePrecision)0);
+			}
+		}
+
+		Voice::delayQueue.push((SamplePrecision)(mydata.dataB[i].x * currentPanningRight * currentVolume));
+
+		outputBuffers[1][i] += Voice::delayQueue.front();
+		Voice::delayQueue.pop();
+
+		mydata.dataB[i].x = 0;
+
+		// advance noise
+		noisePos += noiseStep;
+		if (noisePos > this->globalParameters->noiseBuffer->getSize() - 2)
+		{
+			noisePos = (int32)((float)::rand() / (float)RAND_MAX * (this->globalParameters->noiseBuffer->getSize() - 2) + 2);
+			noiseStep = -1;
+		}
+		else if (noisePos < 2)
+		{
+			noiseStep = 1;
+		}
+
+		// advance noise
+		noisePosTwo += noiseStepTwo;
+		if (noisePosTwo > this->globalParameters->noiseBufferTwo->getSize() - 2)
+		{
+			noisePosTwo = (int32)((float)::rand() / (float)RAND_MAX * (this->globalParameters->noiseBufferTwo->getSize() - 2) + 2);
+			noiseStepTwo = -1;
+		}
+		else if (noisePosTwo < 2)
+		{
+			noiseStepTwo = 1;
+		}
+
+		// ramp parameters
+		currentVolume += volumeRamp;
+		currentPanningLeft += panningLeftRamp;
+		currentPanningRight += panningRightRamp;
+		currentNoiseVolume += noiseVolumeRamp;
+		currentNoiseVolumeTwo += noiseVolumeRampTwo;
+		currentSinusVolume += sinusVolumeRamp;
+		currentSinusVolumeTwo += sinusVolumeRampTwo;
+		currentSquareVolume += squareVolumeRamp;
+		currentSquareVolumeTwo += squareVolumeRampTwo;
+		currentTriangleVolume += triangleVolumeRamp;
+		currentTriangleVolumeTwo += triangleVolumeRampTwo;
+		currentTriangleSlope += triangleSlopeRamp;
+		currentTriangleSlopeTwo += triangleSlopeRampTwo;
+
+	}
+
 	return true;
 }
 
@@ -1188,28 +1213,6 @@ void Voice<SamplePrecision>::reset ()
 	noteOffVolumeRamp = 0.005;
 	
 	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::reset ();
-}
-    
-template<class SamplePrecision>
-void Voice<SamplePrecision>::save ()
-{
-    std::ofstream myfile("D:/Documents/values.txt");
-    std::string data(std::to_string(this->globalParameters->masterVolume));
-	myfile << data;
-	myfile.flush();
-	myfile.close();
-}
-
-template<class SamplePrecision>
-void Voice<SamplePrecision>::load()
-{
-	std::string line;
-	std::ifstream myfile("D:/Documents/values.txt");
-	while (std::getline(myfile, line))
-	{
-		this->globalParameters->masterVolume = std::stof(line);
-	}
-	myfile.close();
 }
 
 //-----------------------------------------------------------------------------

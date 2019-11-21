@@ -49,331 +49,332 @@ using namespace VSTGUI;
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
-namespace NoteExpressionSynth {
+	namespace NoteExpressionSynth {
 
-//------------------------------------------------------------------------
-class ConditionalRemoveViewController : public DelegationController
-{
-public:
-	ConditionalRemoveViewController (IController* controller, bool needed)
-	: DelegationController (controller), needed (needed)
-	{
-	}
-
-	CView* verifyView (CView* view, const UIAttributes& attributes,
-	                   const IUIDescription* description) override
-	{
-		if (!needed)
+		//------------------------------------------------------------------------
+		class ConditionalRemoveViewController : public DelegationController
 		{
-			view->forget ();
+		public:
+			ConditionalRemoveViewController(IController* controller, bool needed)
+				: DelegationController(controller), needed(needed)
+			{
+			}
+
+			CView* verifyView(CView* view, const UIAttributes& attributes,
+				const IUIDescription* description) override
+			{
+				if (!needed)
+				{
+					view->forget();
+					return nullptr;
+				}
+				return controller->verifyView(view, attributes, description);
+			}
+			bool needed;
+		};
+
+		//------------------------------------------------------------------------
+		class InterAppAudioControlsController : public IController
+		{
+		public:
+			enum
+			{
+				kSettings = 5000,
+				kLoadPreset,
+				kSavePreset
+			};
+
+			InterAppAudioControlsController(IInterAppAudioHost* iaaHost) : host(iaaHost) {}
+
+			void valueChanged(VSTGUI::CControl* pControl) override
+			{
+				if (pControl->getValue())
+				{
+					switch (pControl->getTag())
+					{
+					case kSettings:
+					{
+						host->showSettingsView();
+						break;
+					}
+					case kLoadPreset:
+					{
+						getPresetManager()->runLoadPresetBrowser();
+						break;
+					}
+					case kSavePreset:
+					{
+						getPresetManager()->runSavePresetBrowser();
+						break;
+					}
+					}
+				}
+			}
+
+		private:
+			IInterAppAudioPresetManager * getPresetManager()
+			{
+				if (presetManager == nullptr)
+				{
+					TUID uid;
+					ProcessorWithUIController::cid.toTUID(uid);
+					presetManager = owned(host->createPresetManager(uid));
+				}
+				return presetManager;
+			}
+			IInterAppAudioHost* host;
+			IPtr<IInterAppAudioPresetManager> presetManager;
+		};
+
+		//------------------------------------------------------------------------
+		class InterAppAudioPlayer : public KeyboardViewPlayerDelegate
+		{
+		public:
+			InterAppAudioPlayer(IInterAppAudioHost* _host) : host(_host) {}
+
+			int32_t onNoteOn(NoteIndex note, double xPos, double yPos) override
+			{
+				Event e = {};
+				e.type = Event::kNoteOnEvent;
+				e.noteOn.pitch = note;
+				e.noteOn.velocity = static_cast<float> (yPos);
+				if (host->scheduleEventFromUI(e) == kResultTrue)
+				{
+					onNoteModulation(e.noteOn.noteId, xPos, yPos);
+					return e.noteOn.noteId;
+				}
+				return note;
+			}
+			void onNoteOff(NoteIndex note, int32_t noteID) override
+			{
+				Event e = {};
+				e.type = Event::kNoteOffEvent;
+				e.noteOff.noteId = noteID;
+				e.noteOff.pitch = note;
+				e.noteOff.velocity = 0.f;
+				host->scheduleEventFromUI(e);
+			}
+			void onNoteModulation(int32_t noteID, double xPos, double yPos) override
+			{
+				Event e = {};
+				e.type = Event::kNoteExpressionValueEvent;
+				e.noteExpressionValue.noteId = noteID;
+				e.noteExpressionValue.typeId = noteExpressionModulationID;
+				e.noteExpressionValue.value = xPos;
+				host->scheduleEventFromUI(e);
+				e.noteExpressionValue.typeId = kVolumeTypeID;
+				e.noteExpressionValue.value = yPos;
+				host->scheduleEventFromUI(e);
+			}
+
+		private:
+			IInterAppAudioHost * host{ nullptr };
+			NoteExpressionTypeID noteExpressionModulationID{ Controller::kFilterFreqModTypeID };
+		};
+
+		//------------------------------------------------------------------------
+		class KeyboardController : public DelegationController,
+			public ViewListenerAdapter,
+			public IKeyboardViewKeyRangeChangedListener,
+			public KeyboardViewPlayerDelegate
+		{
+		public:
+			KeyboardController(IController* parent, IKeyboardViewPlayerDelegate* player,
+				KeyboardViewRangeSelector::Range& range)
+				: DelegationController(parent), player(player), selectedRange(range)
+			{
+			}
+			~KeyboardController() noexcept override
+			{
+				if (keyboard)
+					keyboard->unregisterViewListener(this);
+				if (rangeSelector)
+				{
+					rangeSelector->unregisterViewListener(this);
+					rangeSelector->unregisterKeyRangeChangedListener(this);
+				}
+			}
+
+			CView* verifyView(CView* view, const UIAttributes& attributes,
+				const IUIDescription* description) override
+			{
+				if (auto kb = dynamic_cast<KeyboardView*> (view))
+				{
+					assert(keyboard == nullptr);
+					keyboard = kb;
+					keyboard->registerViewListener(this);
+					keyboard->setDelegate(this);
+				}
+				else if (auto kbsv = dynamic_cast<KeyboardViewRangeSelector*> (view))
+				{
+					assert(rangeSelector == nullptr);
+					rangeSelector = kbsv;
+					rangeSelector->registerViewListener(this);
+					rangeSelector->registerKeyRangeChangedListener(this);
+					if (selectedRange.length > 0)
+						rangeSelector->setSelectionRange(selectedRange);
+				}
+				return controller->verifyView(view, attributes, description);
+			}
+			void viewAttached(CView* view) override
+			{
+				if (view == rangeSelector)
+				{
+					updateKeyboard();
+				}
+			}
+			void viewWillDelete(CView* view) override
+			{
+				if (view == rangeSelector)
+				{
+					rangeSelector = nullptr;
+				}
+				else if (view == keyboard)
+				{
+					keyboard = nullptr;
+				}
+				view->unregisterViewListener(this);
+			}
+
+		private:
+			int32_t onNoteOn(NoteIndex note, double xPos, double yPos) override
+			{
+				int32_t noteID = note;
+				if (player)
+					noteID = player->onNoteOn(note, xPos, yPos);
+				keyboard->setKeyPressed(note, true);
+				rangeSelector->setKeyPressed(note, true);
+				return noteID;
+			}
+			void onNoteOff(NoteIndex note, int32_t noteID) override
+			{
+				if (player)
+					player->onNoteOff(note, noteID);
+				rangeSelector->setKeyPressed(note, false);
+				keyboard->setKeyPressed(note, false);
+			}
+			void onNoteModulation(int32_t noteID, double xPos, double yPos) override
+			{
+				if (player)
+					player->onNoteModulation(noteID, xPos, yPos);
+			}
+			void onKeyRangeChanged(KeyboardViewRangeSelector*) override
+			{
+				if (!keyboard)
+					return;
+				auto range = rangeSelector->getSelectionRange();
+				while (!keyboard->isWhiteKey(range.position))
+					range.position--;
+				rangeSelector->setSelectionRange(range);
+				updateKeyboard();
+				selectedRange = rangeSelector->getSelectionRange();
+			}
+
+			void updateKeyboard()
+			{
+				if (keyboard && rangeSelector)
+				{
+					auto range = rangeSelector->getSelectionRange();
+					CCoord whiteKeyWidth = std::floor(keyboard->getViewSize().getWidth() /
+						rangeSelector->getNumWhiteKeysSelected());
+					if (range.position + range.length >
+						rangeSelector->getNumKeys() + rangeSelector->getKeyRangeStart())
+					{
+						range.length -= 1;
+						rangeSelector->setSelectionRange(range);
+					}
+					keyboard->setKeyRange(range.position, range.length);
+					keyboard->setWhiteKeyWidth(whiteKeyWidth);
+					keyboard->setBlackKeyWidth(whiteKeyWidth / 1.5);
+					keyboard->setBlackKeyHeight(keyboard->getHeight() / 2.);
+				}
+			}
+
+			KeyboardView* keyboard{ nullptr };
+			KeyboardViewRangeSelector* rangeSelector{ nullptr };
+			IKeyboardViewPlayerDelegate* player{ nullptr };
+			KeyboardViewRangeSelector::Range& selectedRange;
+		};
+
+		//------------------------------------------------------------------------
+		FUID ControllerWithUI::cid(0x1AA302B3, 0xE8384785, 0xB9C3FE3E, 0x08B056F5);
+		FUID ProcessorWithUIController::cid(0x41466D9B, 0xB0654576, 0xB641098F, 0x686371B3);
+
+		enum
+		{
+			kParamMIDILearn = kNumGlobalParameters,
+			kParamEnableMPE
+		};
+
+		//------------------------------------------------------------------------
+		tresult PLUGIN_API ControllerWithUI::initialize(FUnknown* context)
+		{
+			auto result = Controller::initialize(context);
+			if (result == kResultTrue)
+			{
+				parameters.addParameter(USTRING("MIDI Learn"), nullptr, 1, 0, ParameterInfo::kCanAutomate,
+					kParamMIDILearn);
+				FUnknownPtr<IVst3WrapperMPESupport> mpeSupport(context);
+				bool addEnableMPE = mpeSupport;
+#if DEVELOPMENT
+				addEnableMPE = true;
+#endif
+				if (addEnableMPE)
+
+				{
+					parameters.addParameter(USTRING("Enable MPE"), nullptr, 1, 0,
+						ParameterInfo::kCanAutomate, kParamEnableMPE);
+				}
+			}
+			return result;
+		}
+
+		//------------------------------------------------------------------------
+		tresult PLUGIN_API ControllerWithUI::terminate()
+		{
+			if (playerDelegate)
+				delete playerDelegate;
+			playerDelegate = nullptr;
+			return Controller::terminate();
+		}
+
+		//------------------------------------------------------------------------
+		IPlugView* PLUGIN_API ControllerWithUI::createView(FIDString _name)
+		{
+			ConstString name(_name);
+			if (name == ViewType::kEditor)
+			{
+				FUnknownPtr<IInterAppAudioHost> interAudioApp(getHostContext());
+				if (interAudioApp)
+				{
+					ViewRect vr;
+					float scale;
+					if (interAudioApp->getScreenSize(&vr, &scale) == kResultTrue)
+					{
+						if (vr.right >= 1024)
+						{
+							return new VST3Editor(this, "EditorIPad", "note_expression_synth.uidesc");
+						}
+						else if (vr.right == 812)
+						{
+							return new VST3Editor(this, "EditorIPhoneX", "note_expression_synth.uidesc");
+						}
+						else
+						{
+							return new VST3Editor(this, "EditorIPhone4Inch",
+								"note_expression_synth.uidesc");
+						}
+					}
+				}
+				FUnknownPtr<IVst3ToAUWrapper> auWrapper(getHostContext());
+				FUnknownPtr<IVst3WrapperMPESupport> mpeSupport(getHostContext());
+				if (auWrapper && mpeSupport)
+					return new VST3Editor(this, "EditorIPad_AUv3", "note_expression_synth.uidesc");
+				return new VST3Editor(this, "Editor", "note_expression_synth.uidesc");
+			}
+
 			return nullptr;
 		}
-		return controller->verifyView (view, attributes, description);
-	}
-	bool needed;
-};
-
-//------------------------------------------------------------------------
-class InterAppAudioControlsController : public IController
-{
-public:
-	enum
-	{
-		kSettings = 5000,
-		kLoadPreset,
-		kSavePreset
-	};
-
-	InterAppAudioControlsController (IInterAppAudioHost* iaaHost) : host (iaaHost) {}
-
-	void valueChanged (VSTGUI::CControl* pControl) override
-	{
-		if (pControl->getValue ())
-		{
-			switch (pControl->getTag ())
-			{
-				case kSettings:
-				{
-					host->showSettingsView ();
-					break;
-				}
-				case kLoadPreset:
-				{
-					getPresetManager ()->runLoadPresetBrowser ();
-					break;
-				}
-				case kSavePreset:
-				{
-					getPresetManager ()->runSavePresetBrowser ();
-					break;
-				}
-			}
-		}
-	}
-
-private:
-	IInterAppAudioPresetManager* getPresetManager ()
-	{
-		if (presetManager == nullptr)
-		{
-			TUID uid;
-			ProcessorWithUIController::cid.toTUID (uid);
-			presetManager = owned (host->createPresetManager (uid));
-		}
-		return presetManager;
-	}
-	IInterAppAudioHost* host;
-	IPtr<IInterAppAudioPresetManager> presetManager;
-};
-
-//------------------------------------------------------------------------
-class InterAppAudioPlayer : public KeyboardViewPlayerDelegate
-{
-public:
-	InterAppAudioPlayer (IInterAppAudioHost* _host) : host (_host) {}
-
-	int32_t onNoteOn (NoteIndex note, double xPos, double yPos) override
-	{
-		Event e = {};
-		e.type = Event::kNoteOnEvent;
-		e.noteOn.pitch = note;
-		e.noteOn.velocity = static_cast<float> (yPos);
-		if (host->scheduleEventFromUI (e) == kResultTrue)
-		{
-			onNoteModulation (e.noteOn.noteId, xPos, yPos);
-			return e.noteOn.noteId;
-		}
-		return note;
-	}
-	void onNoteOff (NoteIndex note, int32_t noteID) override
-	{
-		Event e = {};
-		e.type = Event::kNoteOffEvent;
-		e.noteOff.noteId = noteID;
-		e.noteOff.pitch = note;
-		e.noteOff.velocity = 0.f;
-		host->scheduleEventFromUI (e);
-	}
-	void onNoteModulation (int32_t noteID, double xPos, double yPos) override
-	{
-		Event e = {};
-		e.type = Event::kNoteExpressionValueEvent;
-		e.noteExpressionValue.noteId = noteID;
-		e.noteExpressionValue.typeId = noteExpressionModulationID;
-		e.noteExpressionValue.value = xPos;
-		host->scheduleEventFromUI (e);
-		e.noteExpressionValue.typeId = kVolumeTypeID;
-		e.noteExpressionValue.value = yPos;
-		host->scheduleEventFromUI (e);
-	}
-
-private:
-	IInterAppAudioHost* host {nullptr};
-	NoteExpressionTypeID noteExpressionModulationID {Controller::kFilterFreqModTypeID};
-};
-
-//------------------------------------------------------------------------
-class KeyboardController : public DelegationController,
-                           public ViewListenerAdapter,
-                           public IKeyboardViewKeyRangeChangedListener,
-                           public KeyboardViewPlayerDelegate
-{
-public:
-	KeyboardController (IController* parent, IKeyboardViewPlayerDelegate* player,
-	                    KeyboardViewRangeSelector::Range& range)
-	: DelegationController (parent), player (player), selectedRange (range)
-	{
-	}
-	~KeyboardController () noexcept override
-	{
-		if (keyboard)
-			keyboard->unregisterViewListener (this);
-		if (rangeSelector)
-		{
-			rangeSelector->unregisterViewListener (this);
-			rangeSelector->unregisterKeyRangeChangedListener (this);
-		}
-	}
-
-	CView* verifyView (CView* view, const UIAttributes& attributes,
-	                   const IUIDescription* description) override
-	{
-		if (auto kb = dynamic_cast<KeyboardView*> (view))
-		{
-			assert (keyboard == nullptr);
-			keyboard = kb;
-			keyboard->registerViewListener (this);
-			keyboard->setDelegate (this);
-		}
-		else if (auto kbsv = dynamic_cast<KeyboardViewRangeSelector*> (view))
-		{
-			assert (rangeSelector == nullptr);
-			rangeSelector = kbsv;
-			rangeSelector->registerViewListener (this);
-			rangeSelector->registerKeyRangeChangedListener (this);
-			if (selectedRange.length > 0)
-				rangeSelector->setSelectionRange (selectedRange);
-		}
-		return controller->verifyView (view, attributes, description);
-	}
-	void viewAttached (CView* view) override
-	{
-		if (view == rangeSelector)
-		{
-			updateKeyboard ();
-		}
-	}
-	void viewWillDelete (CView* view) override
-	{
-		if (view == rangeSelector)
-		{
-			rangeSelector = nullptr;
-		}
-		else if (view == keyboard)
-		{
-			keyboard = nullptr;
-		}
-		view->unregisterViewListener (this);
-	}
-
-private:
-	int32_t onNoteOn (NoteIndex note, double xPos, double yPos) override
-	{
-		int32_t noteID = note;
-		if (player)
-			noteID = player->onNoteOn (note, xPos, yPos);
-		keyboard->setKeyPressed (note, true);
-		rangeSelector->setKeyPressed (note, true);
-		return noteID;
-	}
-	void onNoteOff (NoteIndex note, int32_t noteID) override
-	{
-		if (player)
-			player->onNoteOff (note, noteID);
-		rangeSelector->setKeyPressed (note, false);
-		keyboard->setKeyPressed (note, false);
-	}
-	void onNoteModulation (int32_t noteID, double xPos, double yPos) override
-	{
-		if (player)
-			player->onNoteModulation (noteID, xPos, yPos);
-	}
-	void onKeyRangeChanged (KeyboardViewRangeSelector*) override
-	{
-		if (!keyboard)
-			return;
-		auto range = rangeSelector->getSelectionRange ();
-		while (!keyboard->isWhiteKey (range.position))
-			range.position--;
-		rangeSelector->setSelectionRange (range);
-		updateKeyboard ();
-		selectedRange = rangeSelector->getSelectionRange ();
-	}
-
-	void updateKeyboard ()
-	{
-		if (keyboard && rangeSelector)
-		{
-			auto range = rangeSelector->getSelectionRange ();
-			CCoord whiteKeyWidth = std::floor (keyboard->getViewSize ().getWidth () /
-			                                   rangeSelector->getNumWhiteKeysSelected ());
-			if (range.position + range.length >
-			    rangeSelector->getNumKeys () + rangeSelector->getKeyRangeStart ())
-			{
-				range.length -= 1;
-				rangeSelector->setSelectionRange (range);
-			}
-			keyboard->setKeyRange (range.position, range.length);
-			keyboard->setWhiteKeyWidth (whiteKeyWidth);
-			keyboard->setBlackKeyWidth (whiteKeyWidth / 1.5);
-			keyboard->setBlackKeyHeight (keyboard->getHeight () / 2.);
-		}
-	}
-
-	KeyboardView* keyboard {nullptr};
-	KeyboardViewRangeSelector* rangeSelector {nullptr};
-	IKeyboardViewPlayerDelegate* player {nullptr};
-	KeyboardViewRangeSelector::Range& selectedRange;
-};
-
-//------------------------------------------------------------------------
-FUID ControllerWithUI::cid (0x1AA302B3, 0xE8384785, 0xB9C3FE3E, 0x08B056F5);
-FUID ProcessorWithUIController::cid (0x41466D9B, 0xB0654576, 0xB641098F, 0x686371B3);
-
-enum
-{
-	kParamMIDILearn = kNumGlobalParameters,
-	kParamEnableMPE
-};
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API ControllerWithUI::initialize (FUnknown* context)
-{
-	auto result = Controller::initialize (context);
-	if (result == kResultTrue)
-	{
-		parameters.addParameter (USTRING ("MIDI Learn"), nullptr, 1, 0, ParameterInfo::kCanAutomate,
-		                         kParamMIDILearn);
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (context);
-		bool addEnableMPE = mpeSupport;
-#if DEVELOPMENT
-		addEnableMPE = true;
-#endif
-		if (addEnableMPE)
-
-		{
-			parameters.addParameter (USTRING ("Enable MPE"), nullptr, 1, 0,
-			                         ParameterInfo::kCanAutomate, kParamEnableMPE);
-		}
-	}
-	return result;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API ControllerWithUI::terminate ()
-{
-	if (playerDelegate)
-		delete playerDelegate;
-	playerDelegate = nullptr;
-	return Controller::terminate ();
-}
-
-//------------------------------------------------------------------------
-IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
-{
-	ConstString name (_name);
-	if (name == ViewType::kEditor)
-	{
-		FUnknownPtr<IInterAppAudioHost> interAudioApp (getHostContext ());
-		if (interAudioApp)
-		{
-			ViewRect vr;
-			float scale;
-			if (interAudioApp->getScreenSize (&vr, &scale) == kResultTrue)
-			{
-				if (vr.right >= 1024)
-				{
-					return new VST3Editor (this, "EditorIPad", "note_expression_synth.uidesc");
-				}
-				else if (vr.right == 812)
-				{
-					return new VST3Editor (this, "EditorIPhoneX", "note_expression_synth.uidesc");
-				}
-				else
-				{
-					return new VST3Editor (this, "EditorIPhone4Inch",
-					                       "note_expression_synth.uidesc");
-				}
-			}
-		}
-		FUnknownPtr<IVst3ToAUWrapper> auWrapper (getHostContext ());
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
-		if (auWrapper && mpeSupport)
-			return new VST3Editor (this, "EditorIPad_AUv3", "note_expression_synth.uidesc");
-		return new VST3Editor (this, "Editor", "note_expression_synth.uidesc");
-	}
-	return nullptr;
-}
 
 //------------------------------------------------------------------------
 IController* ControllerWithUI::createSubController (UTF8StringPtr _name,

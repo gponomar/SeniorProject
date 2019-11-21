@@ -62,7 +62,7 @@ public:
 	tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE
 	{
 		if (valueNormalized == 0.5)
-			UString128 ("C").copyTo (string, 128);
+			UString128("C").copyTo(string, 128);
 		else if (valueNormalized == 0)
 			UString128 ("L").copyTo (string, 128);
 		else if (valueNormalized == 1)
@@ -229,6 +229,7 @@ class DecayTimeModNoteExpressionType : public NoteExpressionType
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API Controller::initialize (FUnknown* context)
 {
@@ -309,6 +310,9 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         param = new RangeParameter (USTRING("Load"), kParamLoadState, USTRING("%"), 0, 1, 0);
         param->setPrecision(0);
         parameters.addParameter(param);
+
+		param = new Parameter(USTRING("File Path"), kParamFilePath);
+		parameters.addParameter(param);
 		
         auto* OscTypeParam = new StringListParameter (USTRING("Osc Type"), kParamOscType);
         OscTypeParam->appendString (USTRING("Sinus"));
@@ -473,6 +477,8 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         
         noteExpressionTypes.addNoteExpressionType(new RangeNoteExpressionType(kLoadStateTypeID, String("Load state"), String("Load"), nullptr, -1, 0, 0, 1, NoteExpressionTypeInfo::kIsBipolar, 0));
 
+		noteExpressionTypes.addNoteExpressionType(new NoteExpressionType(kFilePathTypeID, String("File Path"), String("Path"), nullptr, -1, getParameterObject(kParamFilePath), NoteExpressionTypeInfo::kIsBipolar));
+
         auto rNoteExpTwo = new RangeNoteExpressionType (kFilterTwoFreqModTypeID, String ("Filter Two Frequency Modulation"), String ("Freq Two Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
         rNoteExpTwo->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
         noteExpressionTypes.addNoteExpressionType (rNoteExpTwo);
@@ -505,6 +511,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
         midiCCMapping[ControllerNumbers::kCtrlFilterCutoff] = kParamFilterTwoFreq;
         midiCCMapping[ControllerNumbers::kCtrlFilterResonance] = kParamFilterTwoQ;
 	}
+
 	return kResultTrue;
 }
 
@@ -579,6 +586,7 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 		setParamNormalized(kParamFreqModOn, gps.freqModOn);
         setParamNormalized(kParamSaveState, gps.saveState);
         setParamNormalized(kParamLoadState, gps.loadState);
+		setParamNormalized(kParamFilePath, gps.filePath);
 
 		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
 

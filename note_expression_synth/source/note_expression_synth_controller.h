@@ -112,6 +112,7 @@ enum
     kParamSaveState,
     kParamLoadState,
     kParamStereoMs,
+	kParamFilePath,
 
     
 	kNumGlobalParameters
@@ -133,7 +134,7 @@ class Controller : public EditController,
 public:
 	//--- EditController -----------------------------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
-	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
+	tresult PLUGIN_API terminate() SMTG_OVERRIDE;
 	tresult PLUGIN_API setComponentState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API setParamNormalized (ParamID tag, ParamValue value) SMTG_OVERRIDE;
 
@@ -182,7 +183,8 @@ public:
 		kFreqModOnTypeID,
         kSaveStateTypeID,
         kLoadStateTypeID,
-        kStereoMsTypeID
+        kStereoMsTypeID,
+		kFilePathTypeID
         
 	};
 

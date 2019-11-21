@@ -99,6 +99,7 @@ Processor::Processor () : voiceProcessor (nullptr)
 	paramState.freqModOn = 0.0;
     paramState.saveState = 0.0;
     paramState.loadState = 0.0;
+	paramState.filePath = 0.0;
     
     
 }
@@ -350,18 +351,18 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.freqModOn = value;
 							break;
 						}
-                        case kParamSaveState:
-                        {
+						case kParamSaveState:
+						{
 							//voice.save();
 							std::ofstream myfile("D:/Documents/values.txt");
 							std::string data(std::to_string(paramState.masterVolume));
 							myfile << data;
 							myfile.flush();
 							myfile.close();
-                            break;
-                        }
-                        case kParamLoadState:
-                        {
+							break;
+						}
+						case kParamLoadState:
+						{
 							std::string line;
 							std::ifstream myfile("D:/Documents/values.txt");
 							while (std::getline(myfile, line))
@@ -380,8 +381,13 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 								}
 							}
 							myfile.close();
-                            break;
-                        }
+							break;
+						}
+						case kParamFilePath:
+						{
+							paramState.filePath = value;
+							break;
+						}
 						case kParamFilterType:
 						{
 							paramState.filterType = std::min<int8> (
