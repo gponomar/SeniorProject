@@ -1,6 +1,7 @@
 #version 430 
 #extension GL_ARB_shader_storage_buffer_object : require
-layout(local_size_x = 1, local_size_y = 1) in;	
+layout(local_size_x = 1) in;	
+//layout(local_size_x = 1, local_size_y = 1) in;	
 //layout(binding = 0, offset = 0) uniform atomic_uint ac;
 
 //	for texture handling
@@ -23,23 +24,24 @@ layout (std430, binding=0) volatile buffer shader_data
 
 layout (std430, binding=1) volatile buffer uniform_data
 {
+	int numSamples;
 	double freq;
 	double q;
 	int filtertype;
 	double samplerate;
 	double in1;
+	double in2;
+	double out1;
+	double out2;
 };
 
 uniform int sizeofbuffer;
 
-double b0a0;
-double b1a0;
-double b2a0;
-double a1a0;
-double a2a0;
-double in2;
-double out1;
-double out2;
+double b0a0 = 1.0;
+double b1a0 = 0.0;
+double b2a0 = 0.0;
+double a1a0 = 0.0;
+double a2a0 = 0.0;
 double M_PI = 3.14159265358979323846;
 
 void setFreqAndQ (double freq, double q)
@@ -125,10 +127,17 @@ double process (double sampl)
 
 void main() 
 	{
-	uint index = gl_GlobalInvocationID.x;		
+	vec3 index = gl_GlobalInvocationID.xyz;		
+	if (index == vec3(0, 0, 0))
+	{
 	
-	setFreqAndQ(freq, q);
-	dataB[index].x = float(process(dataB[index].x));
+		setFreqAndQ(freq, q);
+		for (int i = 0; i < numSamples; i++)
+		{ 
+			dataB[i].x = float(process(dataB[i].x));
+		}
+	}
+	//dataB[index].x = float(process(dataB[index].x));
 
 
 	//dataB[0].x +=1;
