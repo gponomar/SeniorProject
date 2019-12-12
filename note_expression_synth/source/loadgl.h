@@ -17,11 +17,15 @@ public:
 
 class uniform_data {
 	public:
+		int numSamples;
 		double freq;
 		double q;
 		int filtertype;
 		double samplerate;
 		double in1;
+		double in2;
+		double out1;
+		double out2;
 };
 
 class Loadgl {
@@ -34,12 +38,24 @@ class Loadgl {
 
 		GLuint computeProgram;
 
-		void setVars(double freqf, double qf, int filtertypef, double sampleratef, double in1f) {
+		void setVars(int numSamples, double freqf, double qf, int filtertypef, double sampleratef, double in1f, double in2f, double out1f, double out2f) {
+			uniforms.numSamples = numSamples;
 			uniforms.freq = freqf;
 			uniforms.q = qf;
 			uniforms.filtertype = filtertypef;
 			uniforms.samplerate = sampleratef;
 			uniforms.in1 = in1f;
+			uniforms.in2 = in2f;
+			uniforms.out1 = out1f;
+			uniforms.out2 = out2f;
+		}
+
+		void setVars2(int numSamples, double freqf, double qf, int filtertypef, double sampleratef) {
+			uniforms.numSamples = numSamples;
+			uniforms.freq = freqf;
+			uniforms.q = qf;
+			uniforms.filtertype = filtertypef;
+			uniforms.samplerate = sampleratef;
 		}
 
 		std::string readFileAsString(const std::string &fileName)
@@ -72,7 +88,7 @@ class Loadgl {
 			glShaderStorageBlockBinding(computeProgram, block_index, ssbo_binding_point_index);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo_GPU_id);
 			glUseProgram(computeProgram);
-
+			
 			glGenBuffers(1, &uniformdata);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, uniformdata);
 			glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uniform_data), &uniforms, GL_DYNAMIC_COPY);
@@ -86,7 +102,7 @@ class Loadgl {
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, uniformdata);
 			glUseProgram(computeProgram);
 
-			glDispatchCompute((GLuint)1024, (GLuint)1, 1);				//start compute shader
+			glDispatchCompute((GLuint)1, (GLuint)1, 1);				//start compute shader
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
 
@@ -97,6 +113,13 @@ class Loadgl {
 			int siz = sizeof(ssbo_data);
 			memcpy(data, p, siz);
 			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, uniformdata);
+			GLvoid* p2 = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+			siz = sizeof(uniform_data);
+			memcpy(&uniforms, p2, siz);
+			glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
 
 		}
 
@@ -115,7 +138,7 @@ class Loadgl {
 
 			GLSL::checkVersion();
 			//load the compute shader
-			std::string ShaderString = readFileAsString("D:/Documents/School/snrproj/vstsdk3613_08_04_2019_build_81/VST_SDK/VST3_SDK/public.sdk/samples/vst/note_expression_synth/resource/compute.glsl");
+			std::string ShaderString = readFileAsString("C:/Users/gponomar/Desktop/vst-sdk_3.6.14_build-24_2019-11-29 (1)/VST_SDK/VST3_SDK/public.sdk/samples/vst/note_expression_synth/resource/compute.glsl");
 			const char *shader = ShaderString.c_str();
 			GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
 			glShaderSource(computeShader, 1, &shader, nullptr);

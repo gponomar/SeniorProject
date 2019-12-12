@@ -241,6 +241,10 @@ public:
 	ssbo_data mydata;
 
 	double in1;
+	double in2;
+	double out1;
+	double out2;
+	bool firsttime = true;
 
 	float dataA[1024];
 	float dataB[1024];
@@ -299,7 +303,7 @@ protected:
 
 	ParamValue levelFromVel;
 	ParamValue noteOnVolumeRamp;
-    ParamValue noteOnVolumeRampDecay;
+	ParamValue noteOnVolumeRampDecay;
 	ParamValue noteOffVolumeRamp;
     ParamValue stereoMs;
 };
@@ -959,13 +963,21 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 				currentLPQ += filterQRamp;
 			}
 			//sample = (SamplePrecision)filter->process (sample);
-			mydata.dataB[i].x = sample;
 			in1 = mydata.dataB[numSamples - 1].x;
+			mydata.dataB[i].x = sample;
+			//in1 = 0;
 			
 		}
 	}
-
-	Loadgl::Instance()->setVars(VoiceStatics::freqLogScale.scale(currentLPFreq), 1. - currentLPQ, this->globalParameters->filterType, this->sampleRate, in1);
+	if (firsttime) {
+		in1 = 0.0;
+		in2 = 0.0;
+		out1 = 0.0;
+		out2 = 0.0;
+		Loadgl::Instance()->setVars(numSamples, VoiceStatics::freqLogScale.scale(currentLPFreq), 1. - currentLPQ, this->globalParameters->filterType, this->sampleRate, in1, in2, out1, out2);
+		firsttime = false;
+	}
+	Loadgl::Instance()->setVars2(numSamples, VoiceStatics::freqLogScale.scale(currentLPFreq), 1. - currentLPQ, this->globalParameters->filterType, this->sampleRate);
 	Loadgl::Instance()->compute(&mydata);
 
 	for (int32 i = 0; i < numSamples; i++)
